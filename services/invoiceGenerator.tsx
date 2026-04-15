@@ -5,73 +5,115 @@ interface InvoiceTemplateProps {
   invoice: Invoice;
   products: Product[];
   customer?: Customer;
+  className?: string;
 }
 
-export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, products, customer }) => {
-  const getProductName = (id: string) => products.find(p => p.id === id)?.name || 'Unknown Item';
-
+export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, products, customer, className }) => {
   return (
-    <div className="bg-white p-8 max-w-2xl mx-auto border border-gray-200 hidden print-only" id={`invoice-${invoice.id}`}>
-      <div className="flex justify-between items-center mb-8 border-b pb-4">
-        <div>
-          <h1 className="text-3xl font-bold text-sun-600">INVOICE</h1>
-          <p className="text-gray-500">#{invoice.id}</p>
+    <div className={`bg-white p-8 max-w-4xl mx-auto text-black font-sans ${className || ''}`} id={`invoice-${invoice.id}`}>
+      {/* Header */}
+      <div className="flex justify-between items-start mb-2">
+        <div className="flex flex-col items-center">
+          {/* Logo Placeholder */}
+          <div className="w-24 h-24 mb-1 relative">
+            <svg viewBox="0 0 100 100" className="w-full h-full">
+              <rect width="100" height="100" fill="white" />
+              <path d="M10 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+              <path d="M40 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+              <path d="M70 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+            </svg>
+          </div>
+          <div className="font-bold text-sm tracking-tight">Sunro Lanka Pvt Ltd.</div>
+          <div className="text-[10px] text-gray-600">Delivering Premium Excellence.</div>
         </div>
-        <div className="text-right">
-          <h2 className="text-xl font-bold text-gray-800">Sun Cola Pvt Ltd</h2>
-          <p className="text-sm text-gray-500">123 Industrial Estate</p>
-          <p className="text-sm text-gray-500">Tax ID: 999-888-777</p>
-        </div>
-      </div>
-
-      <div className="flex justify-between mb-8">
-        <div>
-          <h3 className="text-sm font-bold text-gray-400 uppercase">Bill To</h3>
-          <p className="font-semibold text-lg">{customer?.name || invoice.customerName}</p>
-          {customer?.address && <p className="text-gray-600">{customer.address}</p>}
-          <p className="text-gray-600">{customer?.phone}</p>
-        </div>
-        <div className="text-right">
-            <h3 className="text-sm font-bold text-gray-400 uppercase">Date</h3>
-            <p className="font-semibold">{new Date(invoice.date).toLocaleDateString()}</p>
-            <h3 className="text-sm font-bold text-gray-400 uppercase mt-2">Status</h3>
-            <p className="font-semibold text-green-600">{invoice.status}</p>
+        <div className="text-right pt-4">
+          <h1 className="text-2xl font-bold text-red-600 mb-1">Sunro Lanka Beverages.</h1>
+          <p className="text-sm font-medium">Ranasgalla,Nakkawaththa,Kurunegala,Srilanka</p>
+          <p className="text-sm">Email:-sunrolankabeverages@gmail.com</p>
+          <p className="text-sm">Tel/Fax:- 0777402632</p>
         </div>
       </div>
 
-      <table className="w-full mb-8">
-        <thead>
-          <tr className="border-b-2 border-gray-300">
-            <th className="text-left py-2">Description</th>
-            <th className="text-right py-2">Qty</th>
-            <th className="text-right py-2">Price</th>
-            <th className="text-right py-2">Amount</th>
-          </tr>
-        </thead>
+      {/* Title */}
+      <h2 className="text-2xl font-bold text-center mb-2 tracking-widest">INVOICE</h2>
+
+      {/* Meta Table */}
+      <table className="w-full border-collapse border border-black mb-6 text-sm">
         <tbody>
-          {invoice.items.map((item, idx) => (
-            <tr key={idx} className="border-b border-gray-100">
-              <td className="py-2">{getProductName(item.productId)}</td>
-              <td className="text-right py-2">{item.quantity}</td>
-              <td className="text-right py-2">${item.priceAtSale.toFixed(2)}</td>
-              <td className="text-right py-2">${(item.quantity * item.priceAtSale).toFixed(2)}</td>
-            </tr>
-          ))}
+          <tr>
+            <td className="border border-black p-1 pl-2 w-1/3">Distributor Name</td>
+            <td className="border border-black p-1 pl-2 font-bold">{customer?.name || invoice.customerName}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 pl-2">Area</td>
+            <td className="border border-black p-1 pl-2 font-bold">{customer?.address || '-'}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 pl-2">Date</td>
+            <td className="border border-black p-1 pl-2 font-bold">{new Date(invoice.date).toLocaleDateString()}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 pl-2">Invoice No.</td>
+            <td className="border border-black p-1 pl-2 font-bold">{invoice.id}</td>
+          </tr>
         </tbody>
       </table>
 
-      <div className="flex justify-end">
-        <div className="w-1/2">
-          <div className="flex justify-between py-2 border-t border-gray-300">
-            <span className="font-bold text-xl">Total</span>
-            <span className="font-bold text-xl text-sun-600">${invoice.totalAmount.toFixed(2)}</span>
-          </div>
-        </div>
+      {/* Items Table */}
+      <div className="border border-black mb-6 text-sm">
+        <div className="text-center border-b border-black py-1">Products</div>
+        <table className="w-full">
+          <tbody>
+            {products.map(p => {
+              const item = invoice.items.find(i => i.productId === p.id);
+              const qty = item ? item.quantity : '';
+              const price = item ? item.priceAtSale : p.sellingPrice;
+              const total = item ? item.quantity * item.priceAtSale : 0;
+              return (
+                <tr key={p.id}>
+                  <td className="p-1 pl-2 w-1/3">{p.name}</td>
+                  <td className="p-1 text-center w-1/6">{qty}</td>
+                  <td className="p-1 text-center w-1/4">{price}</td>
+                  <td className="p-1 text-right pr-2 w-1/4">{total}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
 
-      <div className="mt-12 text-center text-sm text-gray-400">
-        <p>Thank you for your business!</p>
-        <p>For inquiries, contact support@suncola.com</p>
+      {/* Totals */}
+      <table className="w-full border-collapse border border-black mb-12 text-sm">
+        <tbody>
+          <tr>
+            <td className="border border-black p-1 pl-2 w-3/4">Total Invoice Value</td>
+            <td className="border border-black p-1 text-right pr-2">{invoice.totalAmount}</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 pl-2">Discount</td>
+            <td className="border border-black p-1 text-right pr-2">0</td>
+          </tr>
+          <tr>
+            <td className="border border-black p-1 pl-2">Net Invoice Value</td>
+            <td className="border border-black p-1 text-right pr-2">{invoice.totalAmount}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      {/* Signatures */}
+      <div className="flex justify-between text-sm mt-16 px-4">
+        <div className="text-center">
+          <div className="mb-1 tracking-widest">.....................................</div>
+          Prepared By
+        </div>
+        <div className="text-center">
+          <div className="mb-1 tracking-widest">.....................................</div>
+          Distributor Signature
+        </div>
+        <div className="text-center">
+          <div className="mb-1 tracking-widest">.....................................</div>
+          Authorized Signature
+        </div>
       </div>
     </div>
   );

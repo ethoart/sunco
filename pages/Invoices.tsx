@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { InvoiceTemplate } from '../services/invoiceGenerator';
 import { UserRole, Invoice, InvoiceItem, Product } from '../types';
-import { Plus, Trash2, Printer, Share2, Search, FilePlus, Edit, X } from 'lucide-react';
+import { Plus, Trash2, Printer, Share2, Search, FilePlus, Edit, X, Eye } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -52,11 +52,13 @@ const Invoices = () => {
     createInvoice, addCustomer, stocks, deleteInvoice, updateInvoice, formatCurrency
   } = useERP();
 
-  const [view, setView] = useState<'LIST' | 'CREATE'>('LIST');
+  const [view, setView] = useState<'LIST' | 'CREATE' | 'EDIT'>('LIST');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
+  const [printingInvoiceId, setPrintingInvoiceId] = useState<string | null>(null);
 
-  // Creation State
+  // Creation/Edit State
   const [newCustType, setNewCustType] = useState<'EXISTING' | 'NEW'>('EXISTING');
   const [selectedCustId, setSelectedCustId] = useState('');
   const [guestDetails, setGuestDetails] = useState({ name: '', phone: '', address: '' });
@@ -88,7 +90,10 @@ const Invoices = () => {
     const currentQtyInCart = cart.find(c => c.productId === productId)?.quantity || 0;
     const available = getStock(productId);
 
-    if (currentQtyInCart + qty > available) {
+    // If editing, we technically already have some stock allocated, but for simplicity we check against current available + what was in the cart
+    const previouslyAllocated = editingInvoice?.items.find(i => i.productId === productId)?.quantity || 0;
+    
+    if (currentQtyInCart + qty > available + previouslyAllocated) {
         alert("Insufficient stock in the selected hub!");
         return;
     }
@@ -106,7 +111,7 @@ const Invoices = () => {
     setCart(prev => prev.filter(item => item.productId !== productId));
   };
 
-  const handleCreateInvoice = () => {
+  const handleCreateOrUpdateInvoice = () => {
     if (cart.length === 0) return;
     if (currentUser?.role === UserRole.SUPER_ADMIN && !selectedHubId) {
         alert("Please select a hub!");
@@ -137,22 +142,33 @@ const Invoices = () => {
 
     const total = cart.reduce((acc, item) => acc + (item.quantity * item.priceAtSale), 0);
 
-    const newInvoice: Invoice = {
-        id: `INV-${Date.now().toString().slice(-6)}`,
-        date: new Date().toISOString(),
-        customerId: custId,
-        customerName: custName,
-        hubId: selectedHubId || currentUser?.hubId || 'HEAD_OFFICE',
-        items: cart,
-        totalAmount: total,
-        status: 'PAID', // Assuming instant cash payment for this ERP
-        createdBy: currentUser?.id || 'unknown'
-    };
+    if (view === 'EDIT' && editingInvoice) {
+        updateInvoice(editingInvoice.id, {
+            customerId: custId,
+            customerName: custName,
+            hubId: selectedHubId || currentUser?.hubId || 'HEAD_OFFICE',
+            items: cart,
+            totalAmount: total,
+        });
+    } else {
+        const newInvoice: Invoice = {
+            id: `INV-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString(),
+            customerId: custId,
+            customerName: custName,
+            hubId: selectedHubId || currentUser?.hubId || 'HEAD_OFFICE',
+            items: cart,
+            totalAmount: total,
+            status: 'PAID', // Assuming instant cash payment for this ERP
+            createdBy: currentUser?.id || 'unknown'
+        };
+        createInvoice(newInvoice);
+    }
 
-    createInvoice(newInvoice);
     setView('LIST');
     setCart([]);
     setGuestDetails({ name: '', phone: '', address: '' });
+    setEditingInvoice(null);
     if (currentUser?.role === UserRole.SUPER_ADMIN) setSelectedHubId('');
   };
 
@@ -162,24 +178,21 @@ const Invoices = () => {
       }
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!editingInvoice) return;
-      updateInvoice(editingInvoice.id, {
-          status: editingInvoice.status,
-          totalAmount: editingInvoice.totalAmount // Allow manual override for SA
-      });
-      setEditingInvoice(null);
+  const startEdit = (inv: Invoice) => {
+      setEditingInvoice(inv);
+      setCart(inv.items);
+      setSelectedCustId(inv.customerId);
+      setSelectedHubId(inv.hubId);
+      setNewCustType('EXISTING');
+      setView('EDIT');
   };
 
   const handlePrint = (invId: string) => {
-      // Logic to trigger browser print
-      const printContent = document.getElementById(`invoice-${invId}`);
-      if (printContent) {
+      setPrintingInvoiceId(invId);
+      setTimeout(() => {
           window.print();
-      } else {
-          alert("Rendering invoice for print... please wait a split second and try again (in real app this opens a PDF url)");
-      }
+          setPrintingInvoiceId(null);
+      }, 100);
   };
 
   const handleWhatsApp = (inv: Invoice) => {
@@ -193,64 +206,65 @@ const Invoices = () => {
   return (
     <div className="space-y-6">
        {/* Invoice Template Rendering Area (Hidden until print) */}
-       <div>
-         {invoices.map(inv => (
+       <div className="hidden print-only">
+         {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
              <InvoiceTemplate 
-                key={inv.id} 
-                invoice={inv} 
+                invoice={invoices.find(i => i.id === printingInvoiceId)!} 
                 products={products} 
-                customer={customers.find(c => c.id === inv.customerId)} 
+                customer={customers.find(c => c.id === invoices.find(i => i.id === printingInvoiceId)?.customerId)} 
              />
-         ))}
+         )}
        </div>
 
       <div className="flex justify-between items-center no-print">
-        <h1 className="text-2xl font-bold text-slate-800">{view === 'LIST' ? 'Invoices' : 'New Invoice'}</h1>
+        <h1 className="text-2xl font-bold text-slate-800">
+          {view === 'LIST' ? 'Invoices' : view === 'EDIT' ? `Edit Invoice #${editingInvoice?.id}` : 'New Invoice'}
+        </h1>
         {view === 'LIST' && (
           <button 
-            onClick={() => setView('CREATE')}
+            onClick={() => {
+                setEditingInvoice(null);
+                setCart([]);
+                setSelectedCustId('');
+                setNewCustType('EXISTING');
+                setView('CREATE');
+            }}
             className="flex items-center px-4 py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md"
           >
             <Plus className="mr-2 h-4 w-4" />
             Create Invoice
           </button>
         )}
-        {view === 'CREATE' && (
-          <button onClick={() => setView('LIST')} className="text-slate-500 hover:text-slate-800">Cancel</button>
+        {(view === 'CREATE' || view === 'EDIT') && (
+          <button onClick={() => {
+              setView('LIST');
+              setEditingInvoice(null);
+          }} className="text-slate-500 hover:text-slate-800">Cancel</button>
         )}
       </div>
 
-      {editingInvoice && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print">
-              <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full">
-                  <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-lg font-bold">Edit Invoice #{editingInvoice.id}</h3>
-                      <button onClick={() => setEditingInvoice(null)}><X size={20} /></button>
+      {viewingInvoice && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print overflow-y-auto">
+              <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col relative">
+                  <div className="flex justify-between items-center p-4 border-b bg-slate-50 rounded-t-xl">
+                      <h3 className="text-lg font-bold text-slate-800">View Invoice #{viewingInvoice.id}</h3>
+                      <div className="flex space-x-2">
+                          <button onClick={() => handlePrint(viewingInvoice.id)} className="flex items-center px-4 py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700">
+                              <Printer size={18} className="mr-2" /> Print
+                          </button>
+                          <button onClick={() => setViewingInvoice(null)} className="p-2 bg-slate-200 rounded-lg hover:bg-slate-300 text-slate-600">
+                              <X size={20} />
+                          </button>
+                      </div>
                   </div>
-                  <form onSubmit={handleUpdate} className="space-y-4">
-                      <div>
-                          <label className="block text-sm font-medium text-slate-600 mb-1">Status</label>
-                          <select 
-                              className="w-full p-2 border border-slate-300 rounded-lg"
-                              value={editingInvoice.status}
-                              onChange={e => setEditingInvoice({...editingInvoice, status: e.target.value as any})}
-                          >
-                              <option value="PAID">PAID</option>
-                              <option value="PENDING">PENDING</option>
-                              <option value="CANCELLED">CANCELLED</option>
-                          </select>
-                      </div>
-                      <div>
-                          <label className="block text-sm font-medium text-slate-600 mb-1">Total Amount (Override)</label>
-                          <input 
-                              type="number"
-                              className="w-full p-2 border border-slate-300 rounded-lg"
-                              value={editingInvoice.totalAmount}
-                              onChange={e => setEditingInvoice({...editingInvoice, totalAmount: Number(e.target.value)})}
-                          />
-                      </div>
-                      <button type="submit" className="w-full py-2 bg-sun-600 text-white rounded-lg font-bold">Save Changes</button>
-                  </form>
+                  <div className="p-6 overflow-y-auto bg-slate-100">
+                      <InvoiceTemplate 
+                          invoice={viewingInvoice} 
+                          products={products} 
+                          customer={customers.find(c => c.id === viewingInvoice.customerId)} 
+                          className="shadow-md"
+                      />
+                  </div>
               </div>
           </div>
       )}
@@ -288,6 +302,9 @@ const Invoices = () => {
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(inv.date).toLocaleDateString()}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-700">{formatCurrency(inv.totalAmount)}</td>
                                     <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                        <button onClick={() => setViewingInvoice(inv)} className="text-slate-600 hover:text-sun-600" title="View">
+                                            <Eye size={18} />
+                                        </button>
                                         <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600" title="Print">
                                             <Printer size={18} />
                                         </button>
@@ -296,7 +313,7 @@ const Invoices = () => {
                                                 <button onClick={() => handleWhatsApp(inv)} className="text-green-600 hover:text-green-800" title="Share WhatsApp">
                                                     <Share2 size={18} />
                                                 </button>
-                                                <button onClick={() => setEditingInvoice(inv)} className="text-blue-600 hover:text-blue-800" title="Edit">
+                                                <button onClick={() => startEdit(inv)} className="text-blue-600 hover:text-blue-800" title="Edit">
                                                     <Edit size={18} />
                                                 </button>
                                                 <button onClick={() => handleDelete(inv.id)} className="text-red-600 hover:text-red-800" title="Delete">
@@ -331,6 +348,7 @@ const Invoices = () => {
                                 setSelectedHubId(e.target.value);
                                 setCart([]); // Clear cart when hub changes to avoid stock mismatch
                             }}
+                            disabled={view === 'EDIT'} // Cannot change hub while editing
                         >
                             <option value="">Select a Hub</option>
                             {hubs.map(h => (
@@ -441,12 +459,12 @@ const Invoices = () => {
                 </div>
 
                 <button 
-                    onClick={handleCreateInvoice}
+                    onClick={handleCreateOrUpdateInvoice}
                     disabled={cart.length === 0}
                     className="w-full py-3 bg-sun-600 text-white font-bold rounded-lg hover:bg-sun-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 >
                     <FilePlus className="mr-2 h-5 w-5" />
-                    Generate Invoice
+                    {view === 'EDIT' ? 'Update Invoice' : 'Generate Invoice'}
                 </button>
             </div>
         </div>
