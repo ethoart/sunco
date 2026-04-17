@@ -261,7 +261,7 @@ async function startServer() {
     app.use(express.static(distPath));
     
     // Fallback for Single Page Application routing
-    app.get('*', (req, res) => {
+    app.get('*all', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
