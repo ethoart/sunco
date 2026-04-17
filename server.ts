@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import path from 'path';
 import { 
   User, Hub, Product, StockBatch, Invoice, Customer, Transaction, SalarySlip, ReturnRecord, UserRole 
 } from './types';
@@ -254,6 +255,15 @@ async function startServer() {
       appType: 'spa',
     });
     app.use(vite.middlewares);
+  } else {
+    // Serve static files from the build output directory
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    
+    // Fallback for Single Page Application routing
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
   }
 
   app.listen(PORT, '0.0.0.0', () => {
