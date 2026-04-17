@@ -72,9 +72,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentPage, setPa
 
         {/* Bottom Actions */}
         <div className="mt-auto space-y-4 flex flex-col items-center w-full px-4">
-          <button className="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-400 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-            <Settings size={22} />
-          </button>
+          {currentUser && currentUser.role === UserRole.SUPER_ADMIN && (
+            <button 
+              onClick={() => {
+                setPage('settings');
+                setIsOpen(false);
+              }}
+              title="Settings"
+              className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-colors ${
+                currentPage === 'settings'
+                  ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' 
+                  : 'text-slate-400 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <Settings size={22} />
+            </button>
+          )}
           <button 
             onClick={logout}
             className="w-12 h-12 flex items-center justify-center rounded-2xl text-slate-400 hover:bg-red-50 hover:text-red-500 transition-colors"

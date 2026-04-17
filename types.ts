@@ -79,6 +79,15 @@ export interface Customer {
   buyingLimit?: number;
 }
 
+export interface CompanySettings {
+  id: string;
+  companyName: string;
+  address: string;
+  email: string;
+  phone: string;
+  tagline: string;
+}
+
 export interface InvoiceItem {
   productId: string;
   quantity: number;

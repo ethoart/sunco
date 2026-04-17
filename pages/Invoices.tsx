@@ -212,6 +212,7 @@ const Invoices = () => {
                 invoice={invoices.find(i => i.id === printingInvoiceId)!} 
                 products={products} 
                 customer={customers.find(c => c.id === invoices.find(i => i.id === printingInvoiceId)?.customerId)} 
+                companySettings={useERP().companySettings}
              />
          )}
        </div>
@@ -262,6 +263,7 @@ const Invoices = () => {
                           invoice={viewingInvoice} 
                           products={products} 
                           customer={customers.find(c => c.id === viewingInvoice.customerId)} 
+                          companySettings={useERP().companySettings}
                           className="shadow-md"
                       />
                   </div>

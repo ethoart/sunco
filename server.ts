@@ -39,6 +39,9 @@ const UserModel = mongoose.model('User', userSchema);
 const hubSchema = new mongoose.Schema({ id: String, name: String, location: String, managerId: String, contactNumber: String, status: String }, { versionKey: false });
 const HubModel = mongoose.model('Hub', hubSchema);
 
+const settingSchema = new mongoose.Schema({ id: String, companyName: String, address: String, email: String, phone: String, tagline: String }, { versionKey: false });
+const SettingModel = mongoose.model('Setting', settingSchema);
+
 const productSchema = new mongoose.Schema({ id: String, name: String, category: String, sku: String, unit: String, purchasePrice: Number, sellingPrice: Number, minStockLevel: Number }, { versionKey: false });
 const ProductModel = mongoose.model('Product', productSchema);
 
@@ -86,6 +89,16 @@ async function seedDatabase() {
       receivedDate: new Date().toISOString(), batchNumber: `INIT-${index}`,
     }));
     await StockBatchModel.insertMany(initialBatches);
+
+    await SettingModel.create({
+      id: "company-settings",
+      companyName: "Sunro Lanka Beverages.",
+      address: "Ranasgalla,Nakkawaththa,Kurunegala,Srilanka",
+      email: "sunrolankabeverages@gmail.com",
+      phone: "0777402632",
+      tagline: "Delivering Premium Excellence."
+    });
+
     console.log('Seeding complete.');
   }
 }
@@ -109,6 +122,25 @@ app.delete('/api/users/:id', async (req, res) => {
 
 // Hubs
 app.get('/api/hubs', async (req, res) => res.json(await HubModel.find({}, '-_id')));
+app.post('/api/hubs', async (req, res) => {
+  const hub = await HubModel.create(req.body);
+  res.status(201).json(hub);
+});
+app.put('/api/hubs/:id', async (req, res) => {
+  const hub = await HubModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(hub);
+});
+app.delete('/api/hubs/:id', async (req, res) => {
+  await HubModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
+
+// Settings
+app.get('/api/settings', async (req, res) => res.json(await SettingModel.find({}, '-_id')));
+app.put('/api/settings/:id', async (req, res) => {
+  const setting = await SettingModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true, upsert: true });
+  res.json(setting);
+});
 
 // Products
 app.get('/api/products', async (req, res) => res.json(await ProductModel.find({}, '-_id')));

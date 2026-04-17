@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { 
   User, Hub, Product, Stock, Invoice, Customer, Transaction, SalarySlip,
-  UserRole, StockBatch, ReturnRecord
+  UserRole, StockBatch, ReturnRecord, CompanySettings
 } from '../types';
 import { 
   INITIAL_USERS, INITIAL_HUBS, INITIAL_PRODUCTS, INITIAL_STOCKS, 
@@ -17,6 +17,9 @@ interface ERPContextType {
   removeUser: (userId: string) => void;
   updateUser: (userId: string, updates: Partial<User>) => void;
   hubs: Hub[];
+  addHub: (hub: Hub) => void;
+  updateHub: (hubId: string, updates: Partial<Hub>) => void;
+  deleteHub: (hubId: string) => void;
   products: Product[];
   addProduct: (product: Product) => void;
   stocks: Stock[]; // Derived from batches
@@ -37,6 +40,8 @@ interface ERPContextType {
   returnRecords: ReturnRecord[];
   addReturnRecord: (record: ReturnRecord) => void;
   formatCurrency: (amount: number) => string;
+  companySettings: CompanySettings | null;
+  updateCompanySettings: (settings: CompanySettings) => void;
 }
 
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
@@ -54,6 +59,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [salarySlips, setSalarySlips] = useState<SalarySlip[]>([]);
+  const [companySettings, setCompanySettings] = useState<CompanySettings | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +67,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
         const [
           usersRes, hubsRes, productsRes, stocksRes, 
           customersRes, invoicesRes, transactionsRes, 
-          slipsRes, returnsRes
+          slipsRes, returnsRes, settingsRes
         ] = await Promise.all([
           fetch('/api/users'),
           fetch('/api/hubs'),
@@ -71,7 +77,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
           fetch('/api/invoices'),
           fetch('/api/transactions'),
           fetch('/api/salary-slips'),
-          fetch('/api/return-records')
+          fetch('/api/return-records'),
+          fetch('/api/settings')
         ]);
 
         if (usersRes.ok) setUsers(await usersRes.json());
@@ -83,6 +90,10 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
         if (transactionsRes.ok) setTransactions(await transactionsRes.json());
         if (slipsRes.ok) setSalarySlips(await slipsRes.json());
         if (returnsRes.ok) setReturnRecords(await returnsRes.json());
+        if (settingsRes.ok) {
+           const sets = await settingsRes.json();
+           if (sets.length > 0) setCompanySettings(sets[0]);
+        }
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -143,6 +154,49 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     if (res.ok) {
       const updatedUser = await res.json();
       setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+    }
+  };
+
+  const addHub = async (hub: Hub) => {
+    const res = await fetch('/api/hubs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(hub)
+    });
+    if (res.ok) {
+      const newHub = await res.json();
+      setHubs(prev => [...prev, newHub]);
+    }
+  };
+
+  const updateHub = async (hubId: string, updates: Partial<Hub>) => {
+    const res = await fetch(`/api/hubs/${hubId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (res.ok) {
+      const updatedHub = await res.json();
+      setHubs(prev => prev.map(h => h.id === hubId ? updatedHub : h));
+    }
+  };
+
+  const deleteHub = async (hubId: string) => {
+    const res = await fetch(`/api/hubs/${hubId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setHubs(prev => prev.filter(h => h.id !== hubId));
+    }
+  };
+
+  const updateCompanySettings = async (settings: CompanySettings) => {
+    const res = await fetch(`/api/settings/${settings.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(settings)
+    });
+    if (res.ok) {
+      const updatedSettings = await res.json();
+      setCompanySettings(updatedSettings);
     }
   };
 
@@ -309,7 +363,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     <ERPContext.Provider value={{
       currentUser, login, logout,
       users, addUser, removeUser, updateUser,
-      hubs,
+      hubs, addHub, updateHub, deleteHub,
       products, addProduct,
       stocks, stockBatches, addStockBatch, transferStock,
       customers, addCustomer, updateCustomer,
@@ -317,7 +371,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       transactions, addTransaction,
       salarySlips, addSalarySlip,
       returnRecords, addReturnRecord,
-      formatCurrency
+      formatCurrency, companySettings, updateCompanySettings
     }}>
       {children}
     </ERPContext.Provider>

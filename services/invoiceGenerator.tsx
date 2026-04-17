@@ -1,14 +1,15 @@
 import React from 'react';
-import { Invoice, Product, Customer } from '../types';
+import { Invoice, Product, Customer, CompanySettings } from '../types';
 
 interface InvoiceTemplateProps {
   invoice: Invoice;
   products: Product[];
   customer?: Customer;
+  companySettings?: CompanySettings | null;
   className?: string;
 }
 
-export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, products, customer, className }) => {
+export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, products, customer, companySettings, className }) => {
   return (
     <div className={`bg-white p-8 max-w-4xl mx-auto text-black font-sans ${className || ''}`} id={`invoice-${invoice.id}`}>
       {/* Header */}
@@ -23,14 +24,14 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, produ
               <path d="M70 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
             </svg>
           </div>
-          <div className="font-bold text-sm tracking-tight">Sunro Lanka Pvt Ltd.</div>
-          <div className="text-[10px] text-gray-600">Delivering Premium Excellence.</div>
+          <div className="font-bold text-sm tracking-tight">{companySettings?.companyName || 'Sunro Lanka Pvt Ltd.'}</div>
+          <div className="text-[10px] text-gray-600">{companySettings?.tagline || 'Delivering Premium Excellence.'}</div>
         </div>
         <div className="text-right pt-4">
-          <h1 className="text-2xl font-bold text-red-600 mb-1">Sunro Lanka Beverages.</h1>
-          <p className="text-sm font-medium">Ranasgalla,Nakkawaththa,Kurunegala,Srilanka</p>
-          <p className="text-sm">Email:-sunrolankabeverages@gmail.com</p>
-          <p className="text-sm">Tel/Fax:- 0777402632</p>
+          <h1 className="text-2xl font-bold text-red-600 mb-1">{companySettings?.companyName || 'Sunro Lanka Beverages.'}</h1>
+          <p className="text-sm font-medium">{companySettings?.address || 'Ranasgalla,Nakkawaththa,Kurunegala,Srilanka'}</p>
+          <p className="text-sm">Email:-{companySettings?.email || 'sunrolankabeverages@gmail.com'}</p>
+          <p className="text-sm">Tel/Fax:- {companySettings?.phone || '0777402632'}</p>
         </div>
       </div>
 

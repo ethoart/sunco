@@ -8,6 +8,7 @@ import Invoices from './pages/Invoices';
 import Finance from './pages/Finance';
 import UsersPage from './pages/Users';
 import Customers from './pages/Customers';
+import SettingsPage from './pages/Settings';
 import { Menu } from 'lucide-react';
 
 const LoginPage = () => {
@@ -79,6 +80,7 @@ const MainLayout = () => {
       case 'invoices': return <Invoices />;
       case 'finance': return <Finance />;
       case 'users': return <UsersPage />;
+      case 'settings': return <SettingsPage />;
       default: return <Dashboard />;
     }
   };
