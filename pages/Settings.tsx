@@ -22,6 +22,8 @@ const SettingsPage = () => {
   const [compEmail, setCompEmail] = useState(companySettings?.email || '');
   const [compPhone, setCompPhone] = useState(companySettings?.phone || '');
   const [compTagline, setCompTagline] = useState(companySettings?.tagline || '');
+  const [salesThreshold, setSalesThreshold] = useState(companySettings?.salesTargetThreshold || 1000000);
+  const [salesBonusPct, setSalesBonusPct] = useState(companySettings?.salesTargetBonusPercentage || 5);
 
   // Hubs State
   const [isEditingHub, setIsEditingHub] = useState<Hub | null>(null);
@@ -41,7 +43,9 @@ const SettingsPage = () => {
         address: compAddress,
         email: compEmail,
         phone: compPhone,
-        tagline: compTagline
+        tagline: compTagline,
+        salesTargetThreshold: salesThreshold,
+        salesTargetBonusPercentage: salesBonusPct
       });
       alert('Company Settings updated successfully!');
     }
@@ -132,6 +136,16 @@ const SettingsPage = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Contact Phone</label>
                 <input type="text" className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:border-sun-500 bg-slate-50"
                   value={compPhone} onChange={e => setCompPhone(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sales Bonus Threshold (LKR)</label>
+                <input type="number" className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:border-sun-500 bg-slate-50"
+                  value={salesThreshold} onChange={e => setSalesThreshold(Number(e.target.value))} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Sales Target Bonus (%)</label>
+                <input type="number" className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:border-sun-500 bg-slate-50"
+                  value={salesBonusPct} onChange={e => setSalesBonusPct(Number(e.target.value))} />
               </div>
             </div>
             <div className="pt-4 border-t border-slate-100 flex justify-end">

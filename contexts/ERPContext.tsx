@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useMemo } from 'react';
 import { 
   User, Hub, Product, Stock, Invoice, Customer, Transaction, SalarySlip,
-  UserRole, StockBatch, ReturnRecord, CompanySettings
+  UserRole, StockBatch, ReturnRecord, CompanySettings, StockRequest, Message
 } from '../types';
 import { 
   INITIAL_USERS, INITIAL_HUBS, INITIAL_PRODUCTS, INITIAL_STOCKS, 
@@ -26,6 +26,11 @@ interface ERPContextType {
   stockBatches: StockBatch[];
   addStockBatch: (batch: StockBatch) => void;
   transferStock: (items: { productId: string, qty: number }[], fromHubId: string, toHubId: string) => void;
+  stockRequests: StockRequest[];
+  addStockRequest: (req: Partial<StockRequest>) => void;
+  updateStockRequest: (id: string, updates: Partial<StockRequest>) => void;
+  messages: Message[];
+  addMessage: (msg: Partial<Message>) => void;
   customers: Customer[];
   addCustomer: (customer: Customer) => void;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
@@ -47,13 +52,25 @@ interface ERPContextType {
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
 
 export const ERPProvider = ({ children }: { children?: ReactNode }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const saved = localStorage.getItem('currentUser');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   
   // State Initialization
   const [users, setUsers] = useState<User[]>([]);
   const [hubs, setHubs] = useState<Hub[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [stockBatches, setStockBatches] = useState<StockBatch[]>([]);
+  const [stockRequests, setStockRequests] = useState<StockRequest[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [returnRecords, setReturnRecords] = useState<ReturnRecord[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -67,7 +84,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
         const [
           usersRes, hubsRes, productsRes, stocksRes, 
           customersRes, invoicesRes, transactionsRes, 
-          slipsRes, returnsRes, settingsRes
+          slipsRes, returnsRes, settingsRes, requestsRes, msgsRes
         ] = await Promise.all([
           fetch('/api/users'),
           fetch('/api/hubs'),
@@ -78,10 +95,27 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
           fetch('/api/transactions'),
           fetch('/api/salary-slips'),
           fetch('/api/return-records'),
-          fetch('/api/settings')
+          fetch('/api/settings'),
+          fetch('/api/stock-requests'),
+          fetch('/api/messages')
         ]);
 
-        if (usersRes.ok) setUsers(await usersRes.json());
+        if (usersRes.ok) {
+           const fetchedUsers = await usersRes.json();
+           setUsers(fetchedUsers);
+           // Also update current user if it changed in DB
+           if (currentUser) {
+               const updated = fetchedUsers.find((u: User) => u.id === currentUser.id);
+               if (updated) {
+                   setCurrentUser(updated);
+                   localStorage.setItem('currentUser', JSON.stringify(updated));
+               } else {
+                   // User might have been deleted
+                   setCurrentUser(null);
+                   localStorage.removeItem('currentUser');
+               }
+           }
+        }
         if (hubsRes.ok) setHubs(await hubsRes.json());
         if (productsRes.ok) setProducts(await productsRes.json());
         if (stocksRes.ok) setStockBatches(await stocksRes.json());
@@ -90,6 +124,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
         if (transactionsRes.ok) setTransactions(await transactionsRes.json());
         if (slipsRes.ok) setSalarySlips(await slipsRes.json());
         if (returnsRes.ok) setReturnRecords(await returnsRes.json());
+        if (requestsRes.ok) setStockRequests(await requestsRes.json());
+        if (msgsRes.ok) setMessages(await msgsRes.json());
         if (settingsRes.ok) {
            const sets = await settingsRes.json();
            if (sets.length > 0) setCompanySettings(sets[0]);
@@ -119,12 +155,16 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     const user = users.find(u => u.email === email && (password ? u.password === password : true));
     if (user) {
       setCurrentUser(user);
+      localStorage.setItem('currentUser', JSON.stringify(user));
       return true;
     }
     return false;
   };
 
-  const logout = () => setCurrentUser(null);
+  const logout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+  };
 
   const addUser = async (user: User) => {
     const res = await fetch('/api/users', {
@@ -235,6 +275,42 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       }
     } else {
       throw new Error("Transfer failed");
+    }
+  };
+
+  const addStockRequest = async (req: Partial<StockRequest>) => {
+    const res = await fetch('/api/stock-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req)
+    });
+    if (res.ok) {
+      const newReq = await res.json();
+      setStockRequests(prev => [...prev, newReq]);
+    }
+  };
+
+  const updateStockRequest = async (id: string, updates: Partial<StockRequest>) => {
+    const res = await fetch(`/api/stock-requests/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (res.ok) {
+      const updatedReq = await res.json();
+      setStockRequests(prev => prev.map(r => r.id === id ? updatedReq : r));
+    }
+  };
+
+  const addMessage = async (msg: Partial<Message>) => {
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg)
+    });
+    if (res.ok) {
+      const newMsg = await res.json();
+      setMessages(prev => [...prev, newMsg]);
     }
   };
 
@@ -366,6 +442,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       hubs, addHub, updateHub, deleteHub,
       products, addProduct,
       stocks, stockBatches, addStockBatch, transferStock,
+      stockRequests, addStockRequest, updateStockRequest,
+      messages, addMessage,
       customers, addCustomer, updateCustomer,
       invoices, createInvoice, deleteInvoice, updateInvoice,
       transactions, addTransaction,

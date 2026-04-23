@@ -9,6 +9,7 @@ import Finance from './pages/Finance';
 import UsersPage from './pages/Users';
 import Customers from './pages/Customers';
 import SettingsPage from './pages/Settings';
+import Dispatch from './pages/Dispatch';
 import { Menu } from 'lucide-react';
 
 const LoginPage = () => {
@@ -37,7 +38,7 @@ const LoginPage = () => {
             <input 
               type="email" 
               className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
-              placeholder="admin@suncola.com"
+              placeholder="add your email text"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
@@ -57,9 +58,6 @@ const LoginPage = () => {
             Login to System
           </button>
         </form>
-        <div className="mt-6 text-center text-xs text-gray-400">
-            <p>Demo: admin@suncola.com / password123</p>
-        </div>
       </div>
     </div>
   );
@@ -78,6 +76,7 @@ const MainLayout = () => {
       case 'inventory': return <Inventory />;
       case 'customers': return <Customers />;
       case 'invoices': return <Invoices />;
+      case 'dispatch': return <Dispatch />;
       case 'finance': return <Finance />;
       case 'users': return <UsersPage />;
       case 'settings': return <SettingsPage />;

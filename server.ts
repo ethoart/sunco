@@ -33,17 +33,20 @@ const connectDB = async () => {
 };
 
 // --- Mongoose Schemas ---
-const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, status: String }, { versionKey: false });
+const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, status: String, basicSalary: Number, petrolAllowance: Number, bikeAllowance: Number }, { versionKey: false });
 const UserModel = mongoose.model('User', userSchema);
 
 const hubSchema = new mongoose.Schema({ id: String, name: String, location: String, managerId: String, contactNumber: String, status: String }, { versionKey: false });
 const HubModel = mongoose.model('Hub', hubSchema);
 
-const settingSchema = new mongoose.Schema({ id: String, companyName: String, address: String, email: String, phone: String, tagline: String }, { versionKey: false });
+const settingSchema = new mongoose.Schema({ id: String, companyName: String, address: String, email: String, phone: String, tagline: String, salesTargetThreshold: Number, salesTargetBonusPercentage: Number }, { versionKey: false });
 const SettingModel = mongoose.model('Setting', settingSchema);
 
 const productSchema = new mongoose.Schema({ id: String, name: String, category: String, sku: String, unit: String, purchasePrice: Number, sellingPrice: Number, minStockLevel: Number }, { versionKey: false });
 const ProductModel = mongoose.model('Product', productSchema);
+
+const stockRequestSchema = new mongoose.Schema({ id: String, hubId: String, items: Array, status: String, createdAt: String }, { versionKey: false });
+const StockRequestModel = mongoose.model('StockRequest', stockRequestSchema);
 
 const stockBatchSchema = new mongoose.Schema({ id: String, productId: String, hubId: String, quantity: Number, originalQuantity: Number, receivedDate: String, expiryDate: String, batchNumber: String }, { versionKey: false });
 const StockBatchModel = mongoose.model('StockBatch', stockBatchSchema);
@@ -64,8 +67,24 @@ const SalarySlipModel = mongoose.model('SalarySlip', salarySlipSchema);
 const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String }, { versionKey: false });
 const ReturnRecordModel = mongoose.model('ReturnRecord', returnRecordSchema);
 
+const messageSchema = new mongoose.Schema({ id: String, senderId: String, receiverId: String, content: String, createdAt: String }, { versionKey: false });
+const MessageModel = mongoose.model('Message', messageSchema);
+
 // --- Database Seeding ---
 async function seedDatabase() {
+  if (process.env.SUPER_ADMIN_EMAIL && process.env.SUPER_ADMIN_PASSWORD) {
+    const existingAdmin = await UserModel.findOne({ email: process.env.SUPER_ADMIN_EMAIL });
+    if (existingAdmin) {
+       await UserModel.updateOne({ email: process.env.SUPER_ADMIN_EMAIL }, { $set: { password: process.env.SUPER_ADMIN_PASSWORD } });
+    } else {
+       // Also try to find by role and update its email/password
+       const firstAdmin = await UserModel.findOne({ role: UserRole.SUPER_ADMIN });
+       if (firstAdmin) {
+           await UserModel.updateOne({ _id: firstAdmin._id }, { $set: { email: process.env.SUPER_ADMIN_EMAIL, password: process.env.SUPER_ADMIN_PASSWORD } });
+       }
+    }
+  }
+
   if ((await UserModel.countDocuments()) === 0) {
     console.log('Seeding initial data...');
     let initialUsers = [...INITIAL_USERS];
@@ -75,7 +94,7 @@ async function seedDatabase() {
         initialUsers[adminIndex].email = process.env.SUPER_ADMIN_EMAIL;
         initialUsers[adminIndex].password = process.env.SUPER_ADMIN_PASSWORD;
       } else {
-        initialUsers.push({ id: 'admin-env', name: 'Super Admin', fullName: 'System Super Admin', email: process.env.SUPER_ADMIN_EMAIL, password: process.env.SUPER_ADMIN_PASSWORD, role: UserRole.SUPER_ADMIN, hubId: 'HEAD_OFFICE', status: 'ACTIVE' });
+        initialUsers.push({ id: 'admin-env', username: 'admin', fullName: 'System Super Admin', email: process.env.SUPER_ADMIN_EMAIL, password: process.env.SUPER_ADMIN_PASSWORD, role: UserRole.SUPER_ADMIN, hubId: 'HEAD_OFFICE', status: 'ACTIVE' } as any);
       }
     }
     await UserModel.insertMany(initialUsers);
@@ -147,6 +166,24 @@ app.get('/api/products', async (req, res) => res.json(await ProductModel.find({}
 app.post('/api/products', async (req, res) => {
   const product = await ProductModel.create(req.body);
   res.status(201).json(product);
+});
+
+// Stock Requests
+app.get('/api/stock-requests', async (req, res) => res.json(await StockRequestModel.find({}, '-_id')));
+app.post('/api/stock-requests', async (req, res) => {
+  const reqt = await StockRequestModel.create(req.body);
+  res.status(201).json(reqt);
+});
+app.put('/api/stock-requests/:id', async (req, res) => {
+  const reqt = await StockRequestModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(reqt);
+});
+
+// Messages
+app.get('/api/messages', async (req, res) => res.json(await MessageModel.find({}, '-_id')));
+app.post('/api/messages', async (req, res) => {
+  const msg = await MessageModel.create(req.body);
+  res.status(201).json(msg);
 });
 
 // Stocks (Batches)

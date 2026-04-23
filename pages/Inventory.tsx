@@ -58,6 +58,23 @@ const Inventory = () => {
     alert("Product added successfully!");
   };
 
+  const handleRequestStock = () => {
+    if (transferItems.length === 0 || transferItems.some(i => !i.productId || i.qty <= 0)) {
+        alert("Please add valid items to request!");
+        return;
+    }
+    useERP().addStockRequest({
+        id: `req-${Date.now()}`,
+        hubId: currentUser?.hubId || '',
+        items: transferItems,
+        status: 'PENDING',
+        createdAt: new Date().toISOString()
+    });
+    setTransferModalOpen(false);
+    setTransferItems([{ productId: '', qty: 0 }]);
+    alert("Stock request submitted to Head Office!");
+  };
+
   const getMonthlyStats = () => {
     const now = new Date();
     const currentMonth = now.getMonth();
@@ -250,6 +267,17 @@ const Inventory = () => {
               <Truck className="h-5 w-5" />
               <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                 Distribute Stock
+              </span>
+            </button>
+          )}
+          {isHubAdmin && (
+            <button 
+              onClick={() => setTransferModalOpen(true)}
+              className="group relative w-10 h-10 flex items-center justify-center bg-indigo-500 text-white rounded-full hover:bg-indigo-600 shadow-sm transition-colors"
+            >
+              <Truck className="h-5 w-5" />
+              <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                Request Stock
               </span>
             </button>
           )}
@@ -493,27 +521,30 @@ const Inventory = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
-                <RefreshCw className="mr-2 text-sun-600" />
-                Distribute Stock
+                {isHubAdmin ? <Truck className="mr-2 text-indigo-600" /> : <RefreshCw className="mr-2 text-sun-600" />}
+                {isHubAdmin ? 'Request Stock from Head Office' : 'Distribute Stock'}
             </h2>
-            <form onSubmit={handleTransfer} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Destination Hub</label>
-                    <select 
-                        className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sun-500 focus:border-sun-500 outline-none bg-white text-black"
-                        value={targetHub}
-                        onChange={e => setTargetHub(e.target.value)}
-                        required
-                    >
-                        <option value="">Select Hub</option>
-                        {hubs.map(h => (
-                            <option key={h.id} value={h.id}>{h.name}</option>
-                        ))}
-                    </select>
-                </div>
+            <form onSubmit={isHubAdmin ? (e) => { e.preventDefault(); handleRequestStock(); } : handleTransfer} className="space-y-4">
+                
+                {isSuperAdmin && (
+                    <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">Destination Hub</label>
+                        <select 
+                            className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sun-500 focus:border-sun-500 outline-none bg-white text-black"
+                            value={targetHub}
+                            onChange={e => setTargetHub(e.target.value)}
+                            required
+                        >
+                            <option value="">Select Hub</option>
+                            {hubs.map(h => (
+                                <option key={h.id} value={h.id}>{h.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
 
                 <div className="space-y-3">
-                    <label className="block text-sm font-medium text-slate-700">Products to Transfer</label>
+                    <label className="block text-sm font-medium text-slate-700">{isHubAdmin ? 'Products to Request' : 'Products to Transfer'}</label>
                     {transferItems.map((item, index) => (
                         <div key={index} className="flex space-x-2 items-end">
                             <div className="flex-1">
@@ -569,11 +600,11 @@ const Inventory = () => {
                     >
                         Cancel
                     </button>
-                    <button 
+                        <button 
                         type="submit"
                         className="flex-1 py-2 px-4 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md"
                     >
-                        Transfer All
+                        {isHubAdmin ? 'Submit Request' : 'Transfer All'}
                     </button>
                 </div>
             </form>

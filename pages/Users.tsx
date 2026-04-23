@@ -250,6 +250,24 @@ const UsersPage = () => {
                             onChange={e => setEditingUser({...editingUser, bonuses: Number(e.target.value)})}
                             />
                         </div>
+                        <div className="mt-2">
+                            <label className="block text-sm font-medium text-gray-700">Petrol Allowance (LKR)</label>
+                            <input 
+                            type="number"
+                            className="w-full p-2 border border-slate-300 rounded-lg"
+                            value={editingUser.petrolAllowance || 0}
+                            onChange={e => setEditingUser({...editingUser, petrolAllowance: Number(e.target.value)})}
+                            />
+                        </div>
+                        <div className="mt-2">
+                            <label className="block text-sm font-medium text-gray-700">Bike Allowance (LKR)</label>
+                            <input 
+                            type="number"
+                            className="w-full p-2 border border-slate-300 rounded-lg"
+                            value={editingUser.bikeAllowance || 0}
+                            onChange={e => setEditingUser({...editingUser, bikeAllowance: Number(e.target.value)})}
+                            />
+                        </div>
                     </div>
                   </>
               )}

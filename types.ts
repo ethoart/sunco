@@ -26,6 +26,8 @@ export interface User {
   phone?: string;
   basicSalary?: number;
   bonuses?: number;
+  petrolAllowance?: number;
+  bikeAllowance?: number;
 }
 
 export interface Product {
@@ -86,6 +88,8 @@ export interface CompanySettings {
   email: string;
   phone: string;
   tagline: string;
+  salesTargetThreshold?: number;
+  salesTargetBonusPercentage?: number;
 }
 
 export interface InvoiceItem {
@@ -104,6 +108,22 @@ export interface Invoice {
   totalAmount: number;
   status: 'PAID' | 'PENDING' | 'CANCELLED';
   createdBy: string;
+}
+
+export interface StockRequest {
+  id: string;
+  hubId: string;
+  items: { productId: string, quantity: number }[];
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string; // user id or 'HEAD_OFFICE'
+  receiverId: string; // user id, hub id, or 'ALL_HUBS'
+  content: string;
+  createdAt: string;
 }
 
 export interface Transaction {

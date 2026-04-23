@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SalarySlipTemplate } from '../components/SalarySlipTemplate';
 
 const Finance = () => {
-  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction } = useERP();
+  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction, invoices } = useERP();
   const [activeTab, setActiveTab] = useState<'PNL' | 'SALARY' | 'EXPENSES'>('PNL');
   
   // Salary Form
@@ -57,6 +57,8 @@ const Finance = () => {
       { name: 'Expense', value: totalExpense, color: '#ef4444' }
   ];
 
+  const { companySettings } = useERP();
+
   // Hub-wise Aggregation (Only for SA/FM)
   const hubStats = hubs.map(hub => {
       const hubTxns = transactions.filter(t => t.hubId === hub.id);
@@ -67,6 +69,40 @@ const Finance = () => {
       
       return { ...hub, income, expense, netProfit: income - expense, empCount, totalSalaries };
   });
+
+  const handleSelectEmployee = (empId: string) => {
+      setSelectedEmpId(empId);
+      const employee = users.find(u => u.id === empId);
+      if (employee) {
+          setBasicSalary(employee.basicSalary || 0);
+          
+          let calculatedBonus = employee.bonuses || 0;
+          let calculatedAllocations = 0;
+
+          // Add Petrol and Bike allowance
+          if (employee.petrolAllowance) calculatedAllocations += employee.petrolAllowance;
+          if (employee.bikeAllowance) calculatedAllocations += employee.bikeAllowance;
+
+          // Check if salesperson achieved target
+          const employeeInvoices = invoices.filter(inv => inv.createdBy === employee.id);
+          const totalSales = employeeInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
+
+          const targetThreshold = companySettings?.salesTargetThreshold || 1000000;
+          const targetBonusPct = companySettings?.salesTargetBonusPercentage || 5;
+
+          if (totalSales >= targetThreshold) {
+              const salesBonus = totalSales * (targetBonusPct / 100);
+              calculatedBonus += salesBonus;
+          }
+
+          // Add allowances to the flat basic salary to make it appear separated, or lump it as bonus
+          setBonus(calculatedBonus + calculatedAllocations);
+      } else {
+          setBasicSalary(0);
+          setBonus(0);
+      }
+      setDeductions(0);
+  };
 
   const handleCreateSalary = (e: React.FormEvent) => {
       e.preventDefault();
@@ -229,7 +265,7 @@ const Finance = () => {
                 {/* Ratio Chart */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center">
                     <h2 className="text-lg font-bold text-slate-800 mb-4">Income vs Expense Ratio</h2>
-                    <div className="h-64 w-full">
+                    <div className="h-[300px] w-full min-w-0">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie 
@@ -303,11 +339,7 @@ const Finance = () => {
                         <select 
                             className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
                             value={selectedEmpId}
-                            onChange={e => {
-                                setSelectedEmpId(e.target.value);
-                                const user = users.find(u => u.id === e.target.value);
-                                if (user) setBasicSalary(user.basicSalary || 0);
-                            }}
+                            onChange={e => handleSelectEmployee(e.target.value)}
                             required
                         >
                             <option value="">Select Employee</option>
