@@ -5,7 +5,7 @@ import { HEAD_OFFICE_ID } from '../constants';
 import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar } from 'lucide-react';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice } = useERP();
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
@@ -130,9 +130,36 @@ const Inventory = () => {
     
     try {
         await transferStock(transferItems, HEAD_OFFICE_ID, targetHub);
+
+        // Generate invoice for destination hub
+        const targetHubObj = hubs.find(h => h.id === targetHub);
+        let totalAmount = 0;
+        const invoiceItems = transferItems.map(item => {
+            const prod = products.find(p => p.id === item.productId);
+            const price = prod?.sellingPrice || 0;
+            totalAmount += price * item.qty;
+            return {
+                productId: item.productId,
+                quantity: item.qty,
+                priceAtSale: price
+            };
+        });
+
+        createInvoice({
+            id: `INV-TR-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString(),
+            customerId: targetHub, // using hub as customer
+            customerName: `${targetHubObj?.name || 'Hub'} (Internal Transfer)`,
+            hubId: HEAD_OFFICE_ID,
+            items: invoiceItems,
+            totalAmount,
+            status: 'PAID', // mark as paid or completed for internal transfers
+            createdBy: currentUser?.id || 'system'
+        });
+
         setTransferModalOpen(false);
         setTransferItems([{ productId: '', qty: 0 }]);
-        alert("Stock transferred successfully!");
+        alert("Stock transferred and Invoice generated successfully!");
     } catch (err) {
         alert("Transfer failed: Insufficient stock at Head Office.");
     }
