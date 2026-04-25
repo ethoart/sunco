@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole, StockBatch } from '../types';
 import { HEAD_OFFICE_ID } from '../constants';
-import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar } from 'lucide-react';
+import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar, Printer } from 'lucide-react';
+import { InvoiceTemplate } from '../services/invoiceGenerator';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings } = useERP();
+  const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
@@ -34,6 +36,7 @@ const Inventory = () => {
   const [returnHub, setReturnHub] = useState('');
   const [returnItems, setReturnItems] = useState<{ productId: string, qty: number, reason: string }[]>([{ productId: '', qty: 0, reason: 'EXPIRED' }]);
   const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [printingInvoiceId, setPrintingInvoiceId] = useState<string | null>(null);
 
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
   const isHubAdmin = currentUser?.role === UserRole.HUB_ADMIN;
@@ -159,6 +162,7 @@ const Inventory = () => {
 
         setTransferModalOpen(false);
         setTransferItems([{ productId: '', qty: 0 }]);
+        setViewMode('DISPATCHES');
         alert("Stock transferred and Invoice generated successfully!");
     } catch (err: any) {
         alert("Transfer failed: " + err.message);
@@ -225,6 +229,14 @@ const Inventory = () => {
     } catch (err) {
         alert("Failed to add return records.");
     }
+  };
+
+  const handlePrint = (invId: string) => {
+      setPrintingInvoiceId(invId);
+      setTimeout(() => {
+          window.print();
+          setPrintingInvoiceId(null);
+      }, 100);
   };
 
   return (
@@ -311,6 +323,24 @@ const Inventory = () => {
         </div>
       </div>
 
+      <div className="flex border-b border-slate-200 mb-6 space-x-4">
+        <button 
+            className={`py-2 px-1 font-medium text-sm transition-colors ${viewMode === 'STOCKS' ? 'text-sun-600 border-b-2 border-sun-600' : 'text-slate-500 hover:text-slate-800'}`}
+            onClick={() => setViewMode('STOCKS')}
+        >
+            Stock Status
+        </button>
+        {isSuperAdmin && (
+            <button 
+                className={`py-2 px-1 font-medium text-sm transition-colors ${viewMode === 'DISPATCHES' ? 'text-sun-600 border-b-2 border-sun-600' : 'text-slate-500 hover:text-slate-800'}`}
+                onClick={() => setViewMode('DISPATCHES')}
+            >
+                Dispatch Notes (Transfers)
+            </button>
+        )}
+      </div>
+
+      {viewMode === 'STOCKS' ? (
       <div className="grid grid-cols-1 gap-6">
         {products.map((product) => (
           <div key={product.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -402,6 +432,59 @@ const Inventory = () => {
           </div>
         ))}
       </div>
+      ) : (
+      <div className="space-y-4">
+        {/* Hidden Invoice Templates for Printing */}
+        <div className="hidden print-only">
+          {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
+               <InvoiceTemplate 
+                  invoice={invoices.find(i => i.id === printingInvoiceId)!} 
+                  products={products} 
+                  customer={customers.find(c => c.id === invoices.find(i => i.id === printingInvoiceId)?.customerId)} 
+                  companySettings={companySettings}
+               />
+           )}
+        </div>
+
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Dispatch ID</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Destination</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Items</th>
+                            <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-200">
+                        {invoices.filter(i => i.id.startsWith('INV-TR-')).map(inv => (
+                            <tr key={inv.id} className="hover:bg-slate-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{inv.id}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{inv.customerName}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(inv.date).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
+                                    {inv.items.map(item => `${products.find(p => p.id === item.productId)?.name || 'Product'} (x${item.quantity})`).join(', ')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                    <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center">
+                                        <Printer size={18} className="mr-1" /> Print Note
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {invoices.filter(i => i.id.startsWith('INV-TR-')).length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400">No dispatch records found</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+      )}
 
       {/* Add Product Modal */}
       {addProductModalOpen && (
