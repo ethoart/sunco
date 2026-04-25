@@ -56,31 +56,31 @@ export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, em
           <tbody>
             <tr>
               <td className="border border-slate-300 p-3">Basic Salary</td>
-              <td className="border border-slate-300 p-3 text-right">{slip.basicSalary.toFixed(2)}</td>
+              <td className="border border-slate-300 p-3 text-right">{(slip.basicSalary || 0).toFixed(2)}</td>
             </tr>
             {employee?.petrolAllowance ? (
             <tr>
               <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Petrol Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">({employee.petrolAllowance.toFixed(2)})</td>
+              <td className="border border-slate-300 p-3 text-right text-sm">({(employee.petrolAllowance || 0).toFixed(2)})</td>
             </tr>
             ) : null}
             {employee?.bikeAllowance ? (
             <tr>
               <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Bike Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">({employee.bikeAllowance.toFixed(2)})</td>
+              <td className="border border-slate-300 p-3 text-right text-sm">({(employee.bikeAllowance || 0).toFixed(2)})</td>
             </tr>
             ) : null}
             <tr>
               <td className="border border-slate-300 p-3">Bonuses / Total Allowances</td>
-              <td className="border border-slate-300 p-3 text-right text-green-600">+{slip.bonus.toFixed(2)}</td>
+              <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.bonus || 0).toFixed(2)}</td>
             </tr>
             <tr>
               <td className="border border-slate-300 p-3">Deductions (Tax, EPF, etc.)</td>
-              <td className="border border-slate-300 p-3 text-right text-red-600">-{slip.deductions.toFixed(2)}</td>
+              <td className="border border-slate-300 p-3 text-right text-red-600">-{(slip.deductions || 0).toFixed(2)}</td>
             </tr>
             <tr className="bg-slate-50 font-bold">
               <td className="border border-slate-300 p-3 text-right">NET SALARY</td>
-              <td className="border border-slate-300 p-3 text-right text-lg">{slip.netSalary.toFixed(2)}</td>
+              <td className="border border-slate-300 p-3 text-right text-lg">{(slip.netSalary || 0).toFixed(2)}</td>
             </tr>
           </tbody>
         </table>

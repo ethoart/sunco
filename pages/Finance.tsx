@@ -265,23 +265,21 @@ const Finance = () => {
                 {/* Ratio Chart */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col items-center justify-center">
                     <h2 className="text-lg font-bold text-slate-800 mb-4">Income vs Expense Ratio</h2>
-                    <div className="h-[300px] w-full min-w-0">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie 
-                                    data={dataPnl} 
-                                    innerRadius={60} 
-                                    outerRadius={80} 
-                                    paddingAngle={5} 
-                                    dataKey="value"
-                                >
-                                    {dataPnl.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                            </PieChart>
-                        </ResponsiveContainer>
+                    <div className="flex justify-center w-full">
+                        <PieChart width={300} height={300}>
+                            <Pie 
+                                data={dataPnl} 
+                                innerRadius={60} 
+                                outerRadius={80} 
+                                paddingAngle={5} 
+                                dataKey="value"
+                            >
+                                {dataPnl.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                            </Pie>
+                            <Tooltip formatter={(value) => formatCurrency(Number(value))} />
+                        </PieChart>
                     </div>
                     <div className="flex space-x-6 mt-4">
                         {dataPnl.map((item, idx) => (
