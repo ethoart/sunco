@@ -22,6 +22,7 @@ const SettingsPage = () => {
   const [compEmail, setCompEmail] = useState(companySettings?.email || '');
   const [compPhone, setCompPhone] = useState(companySettings?.phone || '');
   const [compTagline, setCompTagline] = useState(companySettings?.tagline || '');
+  const [compLogoBase64, setCompLogoBase64] = useState(companySettings?.logoBase64 || '');
   const [salesThreshold, setSalesThreshold] = useState(companySettings?.salesTargetThreshold || 1000000);
   const [salesBonusPct, setSalesBonusPct] = useState(companySettings?.salesTargetBonusPercentage || 5);
 
@@ -44,10 +45,26 @@ const SettingsPage = () => {
         email: compEmail,
         phone: compPhone,
         tagline: compTagline,
+        logoBase64: compLogoBase64,
         salesTargetThreshold: salesThreshold,
         salesTargetBonusPercentage: salesBonusPct
       });
       alert('Company Settings updated successfully!');
+    }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+          alert("File size should be less than 2MB");
+          return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompLogoBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -121,6 +138,18 @@ const SettingsPage = () => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Tagline / Slogan</label>
                 <input type="text" className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:border-sun-500 bg-slate-50"
                   value={compTagline} onChange={e => setCompTagline(e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1">Company Logo (Optional)</label>
+                <div className="flex items-center space-x-4">
+                  {compLogoBase64 && (
+                    <img src={compLogoBase64} alt="Company Logo" className="h-16 w-16 object-contain rounded border border-slate-200" />
+                  )}
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} className="p-2 border border-slate-300 rounded-lg outline-none focus:border-sun-500 bg-slate-50 text-sm" />
+                  {compLogoBase64 && (
+                      <button onClick={() => setCompLogoBase64('')} className="text-red-500 text-sm">Remove</button>
+                  )}
+                </div>
               </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-slate-700 mb-1">Office Address (Line 1/2)</label>

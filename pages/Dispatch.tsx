@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole, Product } from '../types';
+import { InvoiceTemplate } from '../services/invoiceGenerator';
 import { Plus, Trash2, Share2, Search, FilePlus, Edit, Eye, ArrowRight } from 'lucide-react';
 
 interface ProductCardProps {
@@ -46,12 +47,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, stock, onAdd }) => {
 
 const Dispatch = () => {
   const { 
-    currentUser, products, hubs, stocks, transferStock, formatCurrency
+    currentUser, products, hubs, stocks, transferStock, formatCurrency, createInvoice, invoices, companySettings, customers
   } = useERP();
 
   const [view, setView] = useState<'LIST' | 'CREATE'>('LIST');
   const [selectedHubId, setSelectedHubId] = useState('');
   const [cart, setCart] = useState<{productId: string, quantity: number}[]>([]);
+  const [printingInvoiceId, setPrintingInvoiceId] = useState<string | null>(null);
 
   // Only Head office stock available for dispatch
   const getStock = (productId: string) => {
@@ -92,7 +94,34 @@ const Dispatch = () => {
 
     try {
         await transferStock(cart.map(c => ({ productId: c.productId, qty: c.quantity })), 'HEAD_OFFICE', selectedHubId);
-        alert("Stock Dispatched Successfully!");
+        
+        // Generate invoice for destination hub
+        const targetHubObj = hubs.find(h => h.id === selectedHubId);
+        let totalAmount = 0;
+        const invoiceItems = cart.map(item => {
+            const prod = products.find(p => p.id === item.productId);
+            const price = prod?.sellingPrice || 0;
+            totalAmount += price * item.quantity;
+            return {
+                productId: item.productId,
+                quantity: item.quantity,
+                priceAtSale: price
+            };
+        });
+
+        await createInvoice({
+            id: `INV-TR-${Date.now().toString().slice(-6)}`,
+            date: new Date().toISOString(),
+            customerId: selectedHubId, // using hub as customer
+            customerName: `${targetHubObj?.name || 'Hub'} (Internal Transfer)`,
+            hubId: 'HEAD_OFFICE',
+            items: invoiceItems,
+            totalAmount,
+            status: 'PAID',
+            createdBy: currentUser?.id || 'HEAD_OFFICE'
+        });
+
+        alert("Stock Dispatched and Invoice Generated Successfully!");
         setView('LIST');
         setCart([]);
         setSelectedHubId('');
@@ -101,13 +130,33 @@ const Dispatch = () => {
     }
   };
 
+  const handlePrint = (invId: string) => {
+      setPrintingInvoiceId(invId);
+      setTimeout(() => {
+          window.print();
+          setPrintingInvoiceId(null);
+      }, 100);
+  };
+
   if (currentUser?.role !== UserRole.SUPER_ADMIN) {
       return <div className="p-8">Access Denied</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="hidden print-only">
+        {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
+             <InvoiceTemplate 
+                key={printingInvoiceId}
+                invoice={invoices.find(i => i.id === printingInvoiceId)!} 
+                products={products} 
+                customer={customers.find(c => c.id === invoices.find(i => i.id === printingInvoiceId)?.customerId)} 
+                companySettings={companySettings}
+             />
+         )}
+      </div>
+
+      <div className="flex justify-between items-center no-print">
         <h1 className="text-2xl font-bold text-slate-800">
           {view === 'LIST' ? 'Stock Dispatch' : 'New Dispatch'}
         </h1>
@@ -132,20 +181,46 @@ const Dispatch = () => {
       </div>
 
       {view === 'LIST' ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden p-8 text-center text-slate-500">
-            <PackageIcon className="mx-auto h-12 w-12 text-slate-300 mb-4" />
-            <p className="text-lg font-medium text-slate-800">Stock Dispatch Log</p>
-            <p className="mt-1">Dispatch history is currently maintained implicitly via stock batches.</p>
-            <button 
-                onClick={() => setView('CREATE')}
-                className="mt-6 inline-flex items-center px-4 py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md"
-            >
-                <Plus className="mr-2 h-4 w-4" />
-                Dispatch New Stock
-            </button>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print">
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Dispatch ID</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Destination Hub</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                            <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-200">
+                        {invoices.filter(i => i.id.startsWith('INV-TR-')).map(inv => (
+                            <tr key={inv.id} className="hover:bg-slate-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">#{inv.id}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{inv.customerName}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(inv.date).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-700">Rs {inv.totalAmount.toFixed(2)}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                    <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center">
+                                         Print Note
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                        {invoices.filter(i => i.id.startsWith('INV-TR-')).length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400">
+                                    <PackageIcon className="mx-auto h-12 w-12 text-slate-300 mb-4" />
+                                    No dispatch records found
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
             {/* Left: Product Selection */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">

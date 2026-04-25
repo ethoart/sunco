@@ -16,13 +16,17 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, produ
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col items-center">
           {/* Logo Placeholder */}
-          <div className="w-24 h-24 mb-1 relative">
-            <svg viewBox="0 0 100 100" className="w-full h-full">
-              <rect width="100" height="100" fill="white" />
-              <path d="M10 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
-              <path d="M40 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
-              <path d="M70 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
-            </svg>
+          <div className="w-24 h-24 mb-1 relative flex items-center justify-center">
+            {companySettings?.logoBase64 ? (
+              <img src={companySettings.logoBase64} alt="Company Logo" className="max-w-full max-h-full object-contain" />
+            ) : (
+              <svg viewBox="0 0 100 100" className="w-full h-full">
+                <rect width="100" height="100" fill="white" />
+                <path d="M10 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+                <path d="M40 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+                <path d="M70 10 h 20 v 80 h -20 z" fill="black" transform="rotate(45 50 50)" />
+              </svg>
+            )}
           </div>
           <div className="font-bold text-sm tracking-tight">{companySettings?.companyName || 'Sunro Lanka Pvt Ltd.'}</div>
           <div className="text-[10px] text-gray-600">{companySettings?.tagline || 'Delivering Premium Excellence.'}</div>
@@ -64,18 +68,25 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({ invoice, produ
       <div className="border border-black mb-6 text-sm">
         <div className="text-center border-b border-black py-1">Products</div>
         <table className="w-full">
+          <thead>
+            <tr className="border-b border-black text-xs">
+                <th className="p-1 pl-2 text-left">Description</th>
+                <th className="p-1 text-center">Qty</th>
+                <th className="p-1 text-center">Unit Price</th>
+                <th className="p-1 text-right pr-2">Amount</th>
+            </tr>
+          </thead>
           <tbody>
-            {products.map(p => {
-              const item = invoice.items.find(i => i.productId === p.id);
-              const qty = item ? item.quantity : '';
-              const price = item ? item.priceAtSale : p.sellingPrice;
-              const total = item ? item.quantity * item.priceAtSale : 0;
+            {invoice.items.map(item => {
+              const p = products.find(prod => prod.id === item.productId);
+              if (!p) return null;
+              const total = item.quantity * item.priceAtSale;
               return (
-                <tr key={p.id}>
+                <tr key={item.productId}>
                   <td className="p-1 pl-2 w-1/3">{p.name}</td>
-                  <td className="p-1 text-center w-1/6">{qty}</td>
-                  <td className="p-1 text-center w-1/4">{price}</td>
-                  <td className="p-1 text-right pr-2 w-1/4">{total}</td>
+                  <td className="p-1 text-center w-1/6">{item.quantity}</td>
+                  <td className="p-1 text-center w-1/4">{item.priceAtSale}</td>
+                  <td className="p-1 text-right pr-2 w-1/4">{total.toFixed(2)}</td>
                 </tr>
               );
             })}

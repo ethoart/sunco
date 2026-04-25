@@ -88,6 +88,7 @@ export interface CompanySettings {
   email: string;
   phone: string;
   tagline: string;
+  logoBase64?: string;
   salesTargetThreshold?: number;
   salesTargetBonusPercentage?: number;
 }

@@ -85,19 +85,23 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
-      <Sidebar 
-        isOpen={sidebarOpen} 
-        setIsOpen={setSidebarOpen} 
-        currentPage={currentPage}
-        setPage={setCurrentPage}
-      />
+    <div className="flex h-screen bg-slate-50 overflow-hidden print:overflow-visible print:bg-white print:block">
+      <div className="no-print h-full print:hidden">
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          setIsOpen={setSidebarOpen} 
+          currentPage={currentPage}
+          setPage={setCurrentPage}
+        />
+      </div>
       
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <TopBar setSidebarOpen={setSidebarOpen} />
+      <div className="flex-1 flex flex-col h-full overflow-hidden relative print:block print:overflow-visible">
+        <div className="no-print print:hidden">
+            <TopBar setSidebarOpen={setSidebarOpen} />
+        </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 print:p-0 print:overflow-visible">
           {renderPage()}
         </main>
       </div>
