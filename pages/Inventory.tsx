@@ -145,7 +145,7 @@ const Inventory = () => {
             };
         });
 
-        createInvoice({
+        await createInvoice({
             id: `INV-TR-${Date.now().toString().slice(-6)}`,
             date: new Date().toISOString(),
             customerId: targetHub, // using hub as customer
@@ -160,8 +160,8 @@ const Inventory = () => {
         setTransferModalOpen(false);
         setTransferItems([{ productId: '', qty: 0 }]);
         alert("Stock transferred and Invoice generated successfully!");
-    } catch (err) {
-        alert("Transfer failed: Insufficient stock at Head Office.");
+    } catch (err: any) {
+        alert("Transfer failed: " + err.message);
     }
   };
 

@@ -355,6 +355,10 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       if (stocksRes.ok) {
         setStockBatches(await stocksRes.json());
       }
+    } else {
+        const errorText = await res.text();
+        console.error("Failed to create invoice:", errorText);
+        throw new Error(`Failed to create invoice: ${errorText}`);
     }
   };
 

@@ -17,19 +17,23 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
 
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
 // MongoDB Connection & Models
 const connectDB = async () => {
-  if (process.env.MONGODB_URI) {
     try {
-      await mongoose.connect(process.env.MONGODB_URI);
+      let uri = process.env.MONGODB_URI;
+      if (!uri) {
+        console.log('No MONGODB_URI provided. Starting in-memory MongoDB...');
+        const mongoServer = await MongoMemoryServer.create();
+        uri = mongoServer.getUri();
+      }
+      await mongoose.connect(uri);
       console.log('Connected to MongoDB');
       await seedDatabase();
     } catch (err) {
       console.error('MongoDB connection error:', err);
     }
-  } else {
-    console.log('No MONGODB_URI provided. Please set it in .env');
-  }
 };
 
 // --- Mongoose Schemas ---
