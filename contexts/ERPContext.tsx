@@ -34,6 +34,7 @@ interface ERPContextType {
   customers: Customer[];
   addCustomer: (customer: Customer) => void;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
+  deleteCustomer: (customerId: string) => void;
   invoices: Invoice[];
   createInvoice: (invoice: Invoice) => void;
   deleteInvoice: (invoiceId: string) => void;
@@ -354,6 +355,13 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     }
   };
 
+  const deleteCustomer = async (customerId: string) => {
+    const res = await fetch(`/api/customers/${customerId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setCustomers(prev => prev.filter(c => c.id !== customerId));
+    }
+  };
+
   const createInvoice = async (invoice: Invoice) => {
     const res = await fetch('/api/invoices', {
       method: 'POST',
@@ -468,7 +476,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       stocks, stockBatches, addStockBatch, transferStock,
       stockRequests, addStockRequest, updateStockRequest,
       messages, addMessage,
-      customers, addCustomer, updateCustomer,
+      customers, addCustomer, updateCustomer, deleteCustomer,
       invoices, createInvoice, deleteInvoice, updateInvoice,
       transactions, addTransaction,
       salarySlips, addSalarySlip,

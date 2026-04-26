@@ -21,7 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, currentPage, setPa
     { id: 'inventory', label: 'Inventory', icon: Package, roles: ['all'] },
     { id: 'dispatch', label: 'Dispatch', icon: Package, roles: [UserRole.SUPER_ADMIN] },
     { id: 'customers', label: 'Customers', icon: Users, roles: ['all'] },
-    { id: 'invoices', label: 'Invoices', icon: FileText, roles: [UserRole.HUB_ADMIN, UserRole.STAFF, UserRole.FINANCIAL_MANAGER] },
+    { id: 'invoices', label: 'Invoices', icon: FileText, roles: [UserRole.SUPER_ADMIN, UserRole.HUB_ADMIN, UserRole.STAFF, UserRole.FINANCIAL_MANAGER] },
     { id: 'finance', label: 'Finance', icon: DollarSign, roles: [UserRole.SUPER_ADMIN, UserRole.FINANCIAL_MANAGER] },
     { id: 'users', label: 'Users', icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.HUB_ADMIN, UserRole.FINANCIAL_MANAGER] },
   ];

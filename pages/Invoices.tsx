@@ -7,36 +7,56 @@ import { Plus, Trash2, Printer, Share2, Search, FilePlus, Edit, X, Eye } from 'l
 interface ProductCardProps {
   product: Product;
   stock: number;
-  onAdd: (id: string, qty: number) => void;
+  onAdd: (id: string, qty: number, expiryDate?: string) => void;
   formatCurrency: (v: number) => string;
+  isReturnReceipt: boolean;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, stock, onAdd, formatCurrency }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, stock, onAdd, formatCurrency, isReturnReceipt }) => {
   const [qty, setQty] = useState(1);
+  const [expiryDate, setExpiryDate] = useState('');
+  const isDisabled = !isReturnReceipt && stock === 0;
 
   return (
-    <div className={`p-4 rounded-lg border text-left transition-all ${stock > 0 ? 'border-slate-200 hover:border-sun-500' : 'border-slate-100 bg-slate-50 opacity-50'}`}>
+    <div className={`p-4 rounded-lg border text-left transition-all ${!isDisabled ? 'border-slate-200 hover:border-sun-500' : 'border-slate-100 bg-slate-50 opacity-50'}`}>
        <div className="font-bold text-slate-800">{product.name}</div>
        <div className="text-sm text-slate-500">{formatCurrency(product.sellingPrice)}</div>
        <div className={`text-xs mt-2 ${stock < 10 ? 'text-red-500' : 'text-green-600'}`}>
            Stock: {stock}
        </div>
+       {isReturnReceipt && (
+           <div className="mt-2 text-xs">
+               <label className="block text-slate-500 mb-1">Expiry Date:</label>
+               <input 
+                   type="date"
+                   className="w-full p-1 border rounded text-slate-700 bg-white"
+                   value={expiryDate}
+                   onChange={e => setExpiryDate(e.target.value)}
+                   required={isReturnReceipt}
+               />
+           </div>
+       )}
        <div className="flex items-center space-x-2 mt-3">
           <input
              type="number"
              min="1"
-             max={stock}
+             max={!isReturnReceipt ? stock : undefined}
              className="w-16 p-1 border border-slate-300 rounded text-sm text-center outline-none focus:border-sun-500 bg-white text-black"
              value={qty}
              onChange={e => setQty(Math.max(1, parseInt(e.target.value) || 0))}
-             disabled={stock === 0}
+             disabled={isDisabled}
           />
           <button
              onClick={() => {
-                 onAdd(product.id, qty);
+                 if (isReturnReceipt && !expiryDate) {
+                     alert("Please set an expiry date for the returned product.");
+                     return;
+                 }
+                 onAdd(product.id, qty, expiryDate);
                  setQty(1); // Reset after adding
+                 setExpiryDate('');
              }}
-             disabled={stock === 0}
+             disabled={isDisabled}
              className="flex-1 px-3 py-1 bg-sun-600 text-white text-sm rounded hover:bg-sun-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
              Add
@@ -80,7 +100,7 @@ const Invoices = () => {
     return stocks.find(s => s.productId === productId && s.hubId === hub)?.quantity || 0;
   };
 
-  const addToCart = (productId: string, qty: number) => {
+  const addToCart = (productId: string, qty: number, expiryDate?: string) => {
     if (currentUser?.role === UserRole.SUPER_ADMIN && !selectedHubId) {
         alert("Please select a hub first!");
         return;
@@ -102,9 +122,9 @@ const Invoices = () => {
     setCart(prev => {
       const existing = prev.find(item => item.productId === productId);
       if (existing) {
-        return prev.map(item => item.productId === productId ? { ...item, quantity: item.quantity + qty } : item);
+        return prev.map(item => item.productId === productId ? { ...item, quantity: item.quantity + qty, expiryDate } : item);
       }
-      return [...prev, { productId, quantity: qty, priceAtSale: product.sellingPrice }];
+      return [...prev, { productId, quantity: qty, priceAtSale: product.sellingPrice, expiryDate }];
     });
   };
 
@@ -223,22 +243,39 @@ const Invoices = () => {
 
       <div className="flex justify-between items-center no-print">
         <h1 className="text-2xl font-bold text-slate-800">
-          {view === 'LIST' ? 'Invoices' : view === 'EDIT' ? `Edit Invoice #${editingInvoice?.id}` : 'New Invoice'}
+          {view === 'LIST' ? 'Invoices & Returns' : view === 'EDIT' ? `Edit Invoice #${editingInvoice?.id}` : isReturnReceipt ? 'New Return' : 'New Invoice'}
         </h1>
         {view === 'LIST' && (
-          <button 
-            onClick={() => {
-                setEditingInvoice(null);
-                setCart([]);
-                setSelectedCustId('');
-                setNewCustType('EXISTING');
-                setView('CREATE');
-            }}
-            className="flex items-center px-4 py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Invoice
-          </button>
+          <div className="flex space-x-3">
+             <button 
+                onClick={() => {
+                    setEditingInvoice(null);
+                    setCart([]);
+                    setSelectedCustId('');
+                    setNewCustType('EXISTING');
+                    setIsReturnReceipt(true);
+                    setView('CREATE');
+                }}
+                className="flex items-center px-4 py-2 border border-red-500 text-red-600 font-bold rounded-lg hover:bg-red-50 shadow-sm"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Return Order
+             </button>
+             <button 
+                onClick={() => {
+                    setEditingInvoice(null);
+                    setCart([]);
+                    setSelectedCustId('');
+                    setNewCustType('EXISTING');
+                    setIsReturnReceipt(false);
+                    setView('CREATE');
+                }}
+                className="flex items-center px-4 py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Create Invoice
+              </button>
+          </div>
         )}
         {(view === 'CREATE' || view === 'EDIT') && (
           <button onClick={() => {
@@ -376,6 +413,7 @@ const Invoices = () => {
                                     stock={stock} 
                                     onAdd={addToCart} 
                                     formatCurrency={formatCurrency}
+                                    isReturnReceipt={isReturnReceipt}
                                 />
                             )
                         })}
@@ -407,7 +445,6 @@ const Invoices = () => {
                          >
                              <option value="">Select Customer</option>
                              {customers
-                                .filter(c => currentUser?.role === UserRole.SUPER_ADMIN || c.hubId === currentUser?.hubId)
                                 .map(c => (
                                  <option key={c.id} value={c.id}>{c.name} - {c.shopName} ({c.status})</option>
                              ))}
@@ -459,7 +496,7 @@ const Invoices = () => {
                 
                 <div className="border-t border-slate-200 pt-4 mb-6 space-y-4">
                     <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={isReturnReceipt} onChange={e => setIsReturnReceipt(e.target.checked)} className="rounded text-sun-600 focus:ring-sun-500"/>
+                        <input type="checkbox" disabled={cart.length > 0} checked={isReturnReceipt} onChange={e => setIsReturnReceipt(e.target.checked)} className="rounded text-sun-600 focus:ring-sun-500"/>
                         <span className="text-sm font-medium text-slate-700">Mark as Return Invoice (Stock goes back)</span>
                     </label>
                     <div className="flex justify-between items-center text-xl font-bold text-slate-800">
@@ -474,7 +511,7 @@ const Invoices = () => {
                     className="w-full py-3 bg-sun-600 text-white font-bold rounded-lg hover:bg-sun-700 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center"
                 >
                     <FilePlus className="mr-2 h-5 w-5" />
-                    {view === 'EDIT' ? 'Update Invoice' : 'Generate Invoice'}
+                    {view === 'EDIT' ? 'Update Invoice' : isReturnReceipt ? 'Generate Return' : 'Generate Invoice'}
                 </button>
             </div>
         </div>

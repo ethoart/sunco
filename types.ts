@@ -98,6 +98,7 @@ export interface InvoiceItem {
   productId: string;
   quantity: number;
   priceAtSale: number;
+  expiryDate?: string;
 }
 
 export interface Invoice {

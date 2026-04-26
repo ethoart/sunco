@@ -242,6 +242,10 @@ app.put('/api/customers/:id', async (req, res) => {
   const customer = await CustomerModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
   res.json(customer);
 });
+app.delete('/api/customers/:id', async (req, res) => {
+  await CustomerModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
 
 // Invoices
 app.get('/api/invoices', async (req, res) => res.json(await InvoiceModel.find({}, '-_id')));
@@ -250,16 +254,42 @@ app.post('/api/invoices', async (req, res) => {
   
   if (invoice.status === 'RETURN') {
       for (const item of invoice.items) {
-          await ReturnRecordModel.create({
-               id: `return-inv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-               productId: item.productId,
-               hubId: invoice.hubId,
-               quantity: Math.abs(item.quantity),
-               reason: 'CUSTOMER_RETURN',
-               date: invoice.date,
-               status: 'APPROVED',
-               invoiceId: invoice.id
-          });
+          const isExpired = item.expiryDate ? new Date(item.expiryDate) < new Date() : false;
+          
+          if (isExpired) {
+              await ReturnRecordModel.create({
+                   id: `return-inv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                   productId: item.productId,
+                   hubId: invoice.hubId,
+                   quantity: Math.abs(item.quantity),
+                   reason: 'EXPIRED',
+                   date: invoice.date,
+                   status: 'APPROVED',
+                   invoiceId: invoice.id
+              });
+          } else {
+              await ReturnRecordModel.create({
+                   id: `return-inv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                   productId: item.productId,
+                   hubId: invoice.hubId,
+                   quantity: Math.abs(item.quantity),
+                   reason: 'CUSTOMER_RETURN',
+                   date: invoice.date,
+                   status: 'APPROVED',
+                   invoiceId: invoice.id
+              });
+              // Add stock back to hub
+              await StockBatchModel.create({
+                  id: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                  productId: item.productId,
+                  hubId: invoice.hubId,
+                  quantity: Math.abs(item.quantity),
+                  originalQuantity: Math.abs(item.quantity),
+                  receivedDate: invoice.date,
+                  expiryDate: item.expiryDate || undefined,
+                  batchNumber: `RET-${invoice.id.substring(4)}`
+              });
+          }
       }
   } else {
       // Deduct Stock (FIFO)

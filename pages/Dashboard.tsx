@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { TrendingUp, TrendingDown, DollarSign, ArrowUpRight, ArrowDownRight, Activity, Calendar, Building2, CreditCard, MoreHorizontal, Filter, Search, Plus, Package, ChevronDown, X } from 'lucide-react';
 
 const Dashboard = () => {
-  const { currentUser, hubs, invoices, transactions, formatCurrency } = useERP();
+  const { currentUser, hubs, invoices, transactions, formatCurrency, customers } = useERP();
   const [dateFilter, setDateFilter] = useState<'TODAY' | 'MONTH' | 'YEAR'>('MONTH');
   const [selectedHubId, setSelectedHubId] = useState<string | null>(null);
 
@@ -233,6 +233,27 @@ const Dashboard = () => {
             <div className="flex items-center text-sm text-slate-500 font-medium">
               <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded mr-2 flex items-center text-xs">
                 <TrendingUp size={12} className="mr-1" /> 4%
+              </span>
+              This month
+            </div>
+          </div>
+
+          {/* Total Clients */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-slate-500 font-medium text-sm mb-1">Total Clients</p>
+                <h3 className="text-3xl font-bold text-slate-900">
+                  {customers.filter(c => effectiveHubId ? c.hubId === effectiveHubId : true).length}
+                </h3>
+              </div>
+              <div className="p-2 bg-slate-50 rounded-xl text-slate-500">
+                <Building2 size={20} />
+              </div>
+            </div>
+            <div className="flex items-center text-sm text-slate-500 font-medium">
+              <span className="bg-green-50 text-green-600 px-2 py-0.5 rounded mr-2 flex items-center text-xs">
+                <TrendingUp size={12} className="mr-1" /> 2%
               </span>
               This month
             </div>

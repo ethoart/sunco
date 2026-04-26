@@ -47,13 +47,19 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, stock, onAdd }) => {
 
 const Dispatch = () => {
   const { 
-    currentUser, products, hubs, stocks, transferStock, formatCurrency, createInvoice, invoices, companySettings, customers
+    currentUser, products, hubs, stocks, transferStock, formatCurrency, createInvoice, invoices, companySettings, customers, deleteInvoice
   } = useERP();
 
   const [view, setView] = useState<'LIST' | 'CREATE'>('LIST');
   const [selectedHubId, setSelectedHubId] = useState('');
   const [cart, setCart] = useState<{productId: string, quantity: number}[]>([]);
   const [printingInvoiceId, setPrintingInvoiceId] = useState<string | null>(null);
+
+  const handleDelete = (id: string) => {
+      if (confirm('Are you sure you want to delete this dispatch note?')) {
+          deleteInvoice(id);
+      }
+  };
 
   // Only Head office stock available for dispatch
   const getStock = (productId: string) => {
@@ -200,9 +206,12 @@ const Dispatch = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{inv.customerName}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{new Date(inv.date).toLocaleDateString()}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-slate-700">Rs {inv.totalAmount.toFixed(2)}</td>
-                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2 flex justify-center items-center">
                                     <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center">
                                          Print Note
+                                    </button>
+                                    <button onClick={() => handleDelete(inv.id)} className="text-red-500 hover:text-red-700 ml-4">
+                                         <Trash2 size={16} />
                                     </button>
                                 </td>
                             </tr>

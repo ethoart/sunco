@@ -4,7 +4,7 @@ import { UserRole, Customer } from '../types';
 import { Search, Plus, Check, X, MapPin, Phone, ShoppingBag, TrendingUp, AlertCircle } from 'lucide-react';
 
 const Customers = () => {
-  const { customers, addCustomer, updateCustomer, currentUser, hubs, invoices, formatCurrency } = useERP();
+  const { customers, addCustomer, updateCustomer, deleteCustomer, currentUser, hubs, invoices, formatCurrency } = useERP();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -162,6 +162,7 @@ const Customers = () => {
                   <>
                     <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Total Sales</th>
                     <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Buying Limit</th>
+                    <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Actions</th>
                   </>
                 )}
               </tr>
@@ -210,6 +211,16 @@ const Customers = () => {
                           </td>
                           <td className="px-6 py-4 text-right text-sm font-medium text-slate-600">
                             {formatCurrency(customer.buyingLimit || 0)}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button onClick={() => {
+                                if (window.confirm("Are you sure you want to delete this client?")) {
+                                    deleteCustomer(customer.id);
+                                }
+                            }} className="text-red-500 hover:text-red-700">
+                                <span className="sr-only">Delete</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+                            </button>
                           </td>
                         </>
                       )}
