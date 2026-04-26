@@ -6,7 +6,7 @@ import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar, Print
 import { InvoiceTemplate } from '../services/invoiceGenerator';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest } = useERP();
   const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
@@ -40,6 +40,8 @@ const Inventory = () => {
 
   const isSuperAdmin = currentUser?.role === UserRole.SUPER_ADMIN;
   const isHubAdmin = currentUser?.role === UserRole.HUB_ADMIN;
+  const isStaff = currentUser?.role === UserRole.STAFF;
+  const canReturnStock = isSuperAdmin || isHubAdmin || isStaff;
 
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +68,7 @@ const Inventory = () => {
         alert("Please add valid items to request!");
         return;
     }
-    useERP().addStockRequest({
+    addStockRequest({
         id: `req-${Date.now()}`,
         hubId: currentUser?.hubId || '',
         items: transferItems,
@@ -270,21 +272,25 @@ const Inventory = () => {
                 </span>
               </button>
               <button 
-                onClick={() => setViewReturnsModalOpen(true)}
-                className="group relative w-10 h-10 flex items-center justify-center bg-orange-600 text-white rounded-full hover:bg-orange-700 shadow-sm transition-colors"
-              >
-                <RotateCcw className="h-5 w-5" />
-                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                  View Returns
-                </span>
-              </button>
-              <button 
                 onClick={() => setAddStockModalOpen(true)}
                 className="group relative w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-full hover:bg-green-700 shadow-sm transition-colors"
               >
                 <Plus className="h-5 w-5" />
                 <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                   Add Stock
+                </span>
+              </button>
+            </>
+          )}
+          {canReturnStock && (
+            <>
+              <button 
+                onClick={() => setViewReturnsModalOpen(true)}
+                className="group relative w-10 h-10 flex items-center justify-center bg-orange-600 text-white rounded-full hover:bg-orange-700 shadow-sm transition-colors"
+              >
+                <RotateCcw className="h-5 w-5" />
+                <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                  View Returns
                 </span>
               </button>
               <button 

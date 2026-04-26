@@ -135,6 +135,22 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       }
     };
     fetchData();
+
+    // Polling for realtime updates (messages and stock requests)
+    const interval = setInterval(async () => {
+        try {
+            const [requestsRes, msgsRes] = await Promise.all([
+                fetch('/api/stock-requests'),
+                fetch('/api/messages')
+            ]);
+            if (requestsRes.ok) setStockRequests(await requestsRes.json());
+            if (msgsRes.ok) setMessages(await msgsRes.json());
+        } catch (err) {
+            console.error("Polling error: ", err);
+        }
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Derived Stocks Summary

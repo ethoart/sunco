@@ -15,12 +15,27 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
   const [selectedHubReceiver, setSelectedHubReceiver] = useState('ALL_HUBS');
 
   const pendingRequests = stockRequests.filter(r => r.status === 'PENDING');
-  const hasNotifs = currentUser?.role === UserRole.SUPER_ADMIN && pendingRequests.length > 0;
 
   const relevantMessages = messages.filter(m => {
     if (currentUser?.role === UserRole.SUPER_ADMIN) return true;
     return m.receiverId === 'ALL_HUBS' || m.receiverId === currentUser?.hubId || m.senderId === currentUser?.id;
   }).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+  const [lastSeenTime, setLastSeenTime] = useState(() => {
+    return localStorage.getItem(`lastSeenPanelTime_${currentUser?.id}`) || '1970-01-01T00:00:00Z';
+  });
+
+  React.useEffect(() => {
+    if (panelOpen) {
+      const now = new Date().toISOString();
+      setLastSeenTime(now);
+      localStorage.setItem(`lastSeenPanelTime_${currentUser?.id}`, now);
+    }
+  }, [panelOpen]);
+
+  const unreadMessagesCount = relevantMessages.filter(m => m.createdAt > lastSeenTime && m.senderId !== currentUser?.id).length;
+  const notifCount = (currentUser?.role === UserRole.SUPER_ADMIN ? pendingRequests.length : 0) + unreadMessagesCount;
+  const hasNotifs = notifCount > 0;
 
   const handleApproveStockRequest = (id: string) => {
       // In a real scenario, this would trigger a stock transfer. 
@@ -66,7 +81,7 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-full transition-colors relative"
         >
           <Bell size={20} />
-          {hasNotifs && <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>}
+          {hasNotifs && <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center font-bold">{notifCount}</span>}
         </button>
         
         <div className="flex items-center space-x-3 pl-2 md:pl-4 md:border-l border-slate-100">
