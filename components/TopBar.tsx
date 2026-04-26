@@ -51,7 +51,7 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-          const newFiles = Array.from(e.target.files);
+          const newFiles = Array.from(e.target.files) as File[];
           newFiles.forEach(file => {
               const reader = new FileReader();
               reader.onloadend = () => {
