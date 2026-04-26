@@ -8,17 +8,17 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
-  const { currentUser, stockRequests, updateStockRequest, hubs, products, messages, addMessage } = useERP();
+  const { currentUser, stockRequests, updateStockRequest, hubs, products, messages, addMessage, users } = useERP();
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'NOTIFS' | 'MESSAGES'>('NOTIFS');
   const [messageText, setMessageText] = useState('');
-  const [selectedHubReceiver, setSelectedHubReceiver] = useState('ALL_HUBS');
+  const [selectedReceiver, setSelectedReceiver] = useState('PUBLIC');
 
   const pendingRequests = stockRequests.filter(r => r.status === 'PENDING');
 
   const relevantMessages = messages.filter(m => {
     if (currentUser?.role === UserRole.SUPER_ADMIN) return true;
-    return m.receiverId === 'ALL_HUBS' || m.receiverId === currentUser?.hubId || m.senderId === currentUser?.id;
+    return m.receiverId === 'ALL_HUBS' || m.receiverId === 'PUBLIC' || m.receiverId === currentUser?.hubId || m.senderId === currentUser?.id || m.receiverId === currentUser?.id;
   }).sort((a,b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
 
   const [lastSeenTime, setLastSeenTime] = useState(() => {
@@ -50,12 +50,10 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
   const handleSendMessage = () => {
       if (!messageText.trim()) return;
       
-      const receiver = currentUser?.role === UserRole.SUPER_ADMIN ? selectedHubReceiver : 'HEAD_OFFICE';
-      
       addMessage({
           id: `msg-${Date.now()}`,
           senderId: currentUser?.id || 'unknown',
-          receiverId: receiver,
+          receiverId: selectedReceiver,
           content: messageText,
           createdAt: new Date().toISOString()
       });
@@ -151,9 +149,13 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                             <div className="flex-1 space-y-3 overflow-y-auto pr-2">
                                 {relevantMessages.map(msg => {
                                     const isMe = msg.senderId === currentUser?.id;
+                                    const senderName = users.find(u => u.id === msg.senderId)?.name || msg.senderId;
+                                    const receiverName = msg.receiverId === 'PUBLIC' ? 'Public' : msg.receiverId === 'ALL_HUBS' ? 'All Hubs' : msg.receiverId === 'HEAD_OFFICE' ? 'Head Office' : hubs.find(h => h.id === msg.receiverId)?.name || users.find(u => u.id === msg.receiverId)?.name || msg.receiverId;
                                     return (
-                                        <div key={msg.id} className={`p-3 rounded-xl max-w-[80%] ${isMe ? 'bg-sun-600 text-white self-end ml-auto' : 'bg-white border text-slate-800'}`}>
-                                            {!isMe && <div className="text-xs font-bold mb-1 opacity-50">{msg.senderId} (to {msg.receiverId})</div>}
+                                        <div key={msg.id} className={`p-3 rounded-xl max-w-[80%] flex flex-col ${isMe ? 'bg-sun-600 text-white self-end ml-auto' : 'bg-white border text-slate-800'}`}>
+                                            <div className="text-[10px] font-bold mb-1 opacity-70">
+                                                {isMe ? `You (to ${receiverName})` : `${senderName} (to ${receiverName})`}
+                                            </div>
                                             <div className="text-sm">{msg.content}</div>
                                         </div>
                                     )
@@ -166,16 +168,21 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
 
                 {panelTab === 'MESSAGES' && (
                     <div className="p-4 border-t bg-white">
-                        {currentUser?.role === UserRole.SUPER_ADMIN && (
-                            <select 
-                                className="w-full mb-2 p-2 text-sm border rounded bg-slate-50 outline-none"
-                                value={selectedHubReceiver}
-                                onChange={e => setSelectedHubReceiver(e.target.value)}
-                            >
-                                <option value="ALL_HUBS">All Hubs (Broadcast)</option>
+                        <select 
+                            className="w-full mb-2 p-2 text-sm border rounded bg-slate-50 outline-none"
+                            value={selectedReceiver}
+                            onChange={e => setSelectedReceiver(e.target.value)}
+                        >
+                            <option value="PUBLIC">Public</option>
+                            <option value="ALL_HUBS">All Hubs (Broadcast)</option>
+                            <option value="HEAD_OFFICE">Head Office</option>
+                            <optgroup label="Hubs">
                                 {hubs.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
-                            </select>
-                        )}
+                            </optgroup>
+                            <optgroup label="Users">
+                                {users.filter(u => u.id !== currentUser?.id).map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                            </optgroup>
+                        </select>
                         <div className="flex items-center space-x-2">
                             <input 
                                 type="text"

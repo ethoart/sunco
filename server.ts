@@ -68,7 +68,7 @@ const TransactionModel = mongoose.model('Transaction', transactionSchema);
 const salarySlipSchema = new mongoose.Schema({ id: String, employeeId: String, employeeName: String, month: String, year: Number, basicSalary: Number, allowances: Number, deductions: Number, netSalary: Number, status: String, hubId: String }, { versionKey: false });
 const SalarySlipModel = mongoose.model('SalarySlip', salarySlipSchema);
 
-const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String }, { versionKey: false });
+const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String, invoiceId: String, batchId: String }, { versionKey: false });
 const ReturnRecordModel = mongoose.model('ReturnRecord', returnRecordSchema);
 
 const messageSchema = new mongoose.Schema({ id: String, senderId: String, receiverId: String, content: String, createdAt: String }, { versionKey: false });
@@ -196,6 +196,10 @@ app.post('/api/stock-batches', async (req, res) => {
   const batch = await StockBatchModel.create(req.body);
   res.status(201).json(batch);
 });
+app.put('/api/stock-batches/:id', async (req, res) => {
+  const batch = await StockBatchModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
+  res.json(batch);
+});
 app.post('/api/stock-batches/transfer', async (req, res) => {
   const { items, fromHubId, toHubId } = req.body;
   const newBatches = [];
@@ -244,17 +248,32 @@ app.get('/api/invoices', async (req, res) => res.json(await InvoiceModel.find({}
 app.post('/api/invoices', async (req, res) => {
   const invoice = req.body;
   
-  // Deduct Stock (FIFO)
-  for (const item of invoice.items) {
-      let remainingToDeduct = item.quantity;
-      const productBatches = await StockBatchModel.find({ productId: item.productId, hubId: invoice.hubId, quantity: { $gt: 0 } }).sort({ receivedDate: 1 });
+  if (invoice.status === 'RETURN') {
+      for (const item of invoice.items) {
+          await ReturnRecordModel.create({
+               id: `return-inv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+               productId: item.productId,
+               hubId: invoice.hubId,
+               quantity: Math.abs(item.quantity),
+               reason: 'CUSTOMER_RETURN',
+               date: invoice.date,
+               status: 'APPROVED',
+               invoiceId: invoice.id
+          });
+      }
+  } else {
+      // Deduct Stock (FIFO)
+      for (const item of invoice.items) {
+          let remainingToDeduct = item.quantity;
+          const productBatches = await StockBatchModel.find({ productId: item.productId, hubId: invoice.hubId, quantity: { $gt: 0 } }).sort({ receivedDate: 1 });
 
-      for (const batch of productBatches) {
-          if (remainingToDeduct <= 0) break;
-          const deduct = Math.min(batch.quantity, remainingToDeduct);
-          batch.quantity -= deduct;
-          await batch.save();
-          remainingToDeduct -= deduct;
+          for (const batch of productBatches) {
+              if (remainingToDeduct <= 0) break;
+              const deduct = Math.min(batch.quantity, remainingToDeduct);
+              batch.quantity -= deduct;
+              await batch.save();
+              remainingToDeduct -= deduct;
+          }
       }
   }
 
@@ -262,8 +281,8 @@ app.post('/api/invoices', async (req, res) => {
 
   // Add Income Transaction
   const transaction = await TransactionModel.create({
-      id: `txn-${Date.now()}`, date: new Date().toISOString(), type: 'INCOME', category: 'SALES',
-      amount: invoice.totalAmount, description: `Invoice #${invoice.id} payment`, hubId: invoice.hubId
+      id: `txn-${Date.now()}`, date: new Date().toISOString(), type: invoice.status === 'RETURN' ? 'EXPENSE' : 'INCOME', category: invoice.status === 'RETURN' ? 'OTHER' : 'SALES',
+      amount: Math.abs(invoice.totalAmount), description: invoice.status === 'RETURN' ? `Invoice #${invoice.id} refund` : `Invoice #${invoice.id} payment`, hubId: invoice.hubId
   });
 
   res.status(201).json({ invoice: newInvoice, transaction });
@@ -303,7 +322,13 @@ app.post('/api/return-records', async (req, res) => {
   // Deduct stock if needed
   if (record.reason === 'EXPIRED' || record.reason === 'DAMAGED_BOX') {
       let remainingToDeduct = record.quantity;
-      const productBatches = await StockBatchModel.find({ productId: record.productId, hubId: record.hubId, quantity: { $gt: 0 } }).sort({ receivedDate: 1 });
+      let productBatches;
+      
+      if (record.batchId) {
+          productBatches = await StockBatchModel.find({ id: record.batchId, quantity: { $gt: 0 } });
+      } else {
+          productBatches = await StockBatchModel.find({ productId: record.productId, hubId: record.hubId, quantity: { $gt: 0 } }).sort({ receivedDate: 1 });
+      }
 
       for (const batch of productBatches) {
           if (remainingToDeduct <= 0) break;

@@ -65,6 +65,7 @@ export interface ReturnRecord {
   date: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
   invoiceId?: string;
+  batchId?: string;
 }
 
 export interface Customer {
@@ -107,7 +108,7 @@ export interface Invoice {
   hubId: string;
   items: InvoiceItem[];
   totalAmount: number;
-  status: 'PAID' | 'PENDING' | 'CANCELLED';
+  status: 'PAID' | 'PENDING' | 'CANCELLED' | 'RETURN';
   createdBy: string;
 }
 

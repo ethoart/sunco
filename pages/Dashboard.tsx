@@ -27,8 +27,11 @@ const Dashboard = () => {
     return true;
   };
 
+  const isStaff = currentUser?.role === UserRole.STAFF;
+
   const filteredInvoices = invoices
     .filter(i => effectiveHubId ? i.hubId === effectiveHubId : true)
+    .filter(i => isStaff ? i.createdBy === currentUser?.id : true)
     .filter(i => filterByDate(i.date));
 
   const filteredTransactions = transactions
@@ -37,12 +40,12 @@ const Dashboard = () => {
 
   // KPIs
   const totalRevenue = filteredInvoices.reduce((acc, inv) => acc + inv.totalAmount, 0);
-  const totalExpenses = filteredTransactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + t.amount, 0);
+  const totalExpenses = isStaff ? 0 : filteredTransactions.filter(t => t.type === 'EXPENSE').reduce((acc, t) => acc + t.amount, 0);
   const netProfit = totalRevenue - totalExpenses;
   
   // Chart Data
   const salesData = hubs.map(hub => {
-      const hubSales = invoices.filter(i => i.hubId === hub.id).reduce((acc, i) => acc + i.totalAmount, 0);
+      const hubSales = invoices.filter(i => i.hubId === hub.id && (!isStaff || i.createdBy === currentUser?.id)).reduce((acc, i) => acc + i.totalAmount, 0);
       return { name: hub.name, sales: hubSales, expenses: hubSales * 0.7 }; // Mock expenses for chart
   });
 

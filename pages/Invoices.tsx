@@ -63,6 +63,7 @@ const Invoices = () => {
   const [selectedCustId, setSelectedCustId] = useState('');
   const [guestDetails, setGuestDetails] = useState({ name: '', phone: '', address: '' });
   const [cart, setCart] = useState<InvoiceItem[]>([]);
+  const [isReturnReceipt, setIsReturnReceipt] = useState(false);
   const [selectedHubId, setSelectedHubId] = useState(currentUser?.hubId || '');
 
   // Filter invoices for current user's hub (unless SA)
@@ -93,7 +94,7 @@ const Invoices = () => {
     // If editing, we technically already have some stock allocated, but for simplicity we check against current available + what was in the cart
     const previouslyAllocated = editingInvoice?.items.find(i => i.productId === productId)?.quantity || 0;
     
-    if (currentQtyInCart + qty > available + previouslyAllocated) {
+    if (!isReturnReceipt && (currentQtyInCart + qty > available + previouslyAllocated)) {
         alert("Insufficient stock in the selected hub!");
         return;
     }
@@ -141,14 +142,17 @@ const Invoices = () => {
     }
 
     const total = cart.reduce((acc, item) => acc + (item.quantity * item.priceAtSale), 0);
+    const finalTotal = isReturnReceipt ? -total : total;
+    const finalItems = isReturnReceipt ? cart.map(i => ({...i, quantity: -i.quantity})) : cart;
 
     if (view === 'EDIT' && editingInvoice) {
         updateInvoice(editingInvoice.id, {
             customerId: custId,
             customerName: custName,
             hubId: selectedHubId || currentUser?.hubId || 'HEAD_OFFICE',
-            items: cart,
-            totalAmount: total,
+            items: finalItems,
+            totalAmount: finalTotal,
+            status: isReturnReceipt ? 'RETURN' : undefined
         });
     } else {
         const newInvoice: Invoice = {
@@ -157,9 +161,9 @@ const Invoices = () => {
             customerId: custId,
             customerName: custName,
             hubId: selectedHubId || currentUser?.hubId || 'HEAD_OFFICE',
-            items: cart,
-            totalAmount: total,
-            status: 'PAID', // Assuming instant cash payment for this ERP
+            items: finalItems,
+            totalAmount: finalTotal,
+            status: isReturnReceipt ? 'RETURN' : 'PAID', // Assuming instant cash payment for this ERP
             createdBy: currentUser?.id || 'unknown'
         };
         createInvoice(newInvoice);
@@ -453,9 +457,13 @@ const Invoices = () => {
                     )}
                 </div>
                 
-                <div className="border-t border-slate-200 pt-4 mb-6">
+                <div className="border-t border-slate-200 pt-4 mb-6 space-y-4">
+                    <label className="flex items-center space-x-2">
+                        <input type="checkbox" checked={isReturnReceipt} onChange={e => setIsReturnReceipt(e.target.checked)} className="rounded text-sun-600 focus:ring-sun-500"/>
+                        <span className="text-sm font-medium text-slate-700">Mark as Return Invoice (Stock goes back)</span>
+                    </label>
                     <div className="flex justify-between items-center text-xl font-bold text-slate-800">
-                        <span>Total</span>
+                        <span>Total {isReturnReceipt && '(Refund)'}</span>
                         <span>{formatCurrency(cart.reduce((acc, item) => acc + (item.quantity * item.priceAtSale), 0))}</span>
                     </div>
                 </div>

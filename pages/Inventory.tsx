@@ -381,20 +381,45 @@ const Inventory = () => {
                         <th className="pb-2">Received</th>
                         <th className="pb-2">Expiry</th>
                         <th className="pb-2 text-right">Qty</th>
+                        {canReturnStock && <th className="pb-2 text-right">Action</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {stockBatches
-                        .filter(b => b.productId === product.id && (isSuperAdmin || b.hubId === currentUser?.hubId))
-                        .map(batch => (
-                        <tr key={batch.id} className="border-t border-slate-200">
-                          <td className="py-2 font-mono">{batch.batchNumber}</td>
-                          <td className="py-2">{hubs.find(h => h.id === batch.hubId)?.name || 'Head Office'}</td>
-                          <td className="py-2">{new Date(batch.receivedDate).toLocaleDateString()}</td>
-                          <td className="py-2 text-red-600">{batch.expiryDate ? new Date(batch.expiryDate).toLocaleDateString() : '-'}</td>
-                          <td className="py-2 text-right font-bold">{batch.quantity}</td>
-                        </tr>
-                      ))}
+                        .filter(b => b.productId === product.id && b.quantity > 0 && (isSuperAdmin || b.hubId === currentUser?.hubId))
+                        .map(batch => {
+                          const isExpired = batch.expiryDate && new Date(batch.expiryDate) < new Date();
+                          return (
+                          <tr key={batch.id} className="border-t border-slate-200">
+                            <td className="py-2 font-mono">{batch.batchNumber}</td>
+                            <td className="py-2">{hubs.find(h => h.id === batch.hubId)?.name || 'Head Office'}</td>
+                            <td className="py-2">{new Date(batch.receivedDate).toLocaleDateString()}</td>
+                            <td className={`py-2 ${isExpired ? 'text-red-600 font-bold' : ''}`}>{batch.expiryDate ? new Date(batch.expiryDate).toLocaleDateString() : '-'}</td>
+                            <td className="py-2 text-right font-bold">{batch.quantity}</td>
+                            {canReturnStock && (
+                                <td className="py-2 text-right">
+                                    <button 
+                                        onClick={() => {
+                                            addReturnRecord({
+                                                id: `return-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                                productId: batch.productId,
+                                                hubId: batch.hubId,
+                                                quantity: batch.quantity,
+                                                reason: 'EXPIRED',
+                                                date: new Date().toISOString(),
+                                                status: 'PENDING',
+                                                batchId: batch.id
+                                            });
+                                            alert("Sent to returns logic!");
+                                        }}
+                                        className={`text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 ${isExpired ? 'animate-pulse' : ''}`}
+                                    >
+                                        Return 
+                                    </button>
+                                </td>
+                            )}
+                          </tr>
+                        )})}
                     </tbody>
                   </table>
                 </div>
