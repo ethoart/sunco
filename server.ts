@@ -3,6 +3,7 @@ import { createServer as createViteServer } from 'vite';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
+import nodemailer from 'nodemailer';
 import { 
   User, Hub, Product, StockBatch, Invoice, Customer, Transaction, SalarySlip, ReturnRecord, UserRole 
 } from './types';
@@ -71,7 +72,7 @@ const SalarySlipModel = mongoose.model('SalarySlip', salarySlipSchema);
 const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String, invoiceId: String, batchId: String }, { versionKey: false });
 const ReturnRecordModel = mongoose.model('ReturnRecord', returnRecordSchema);
 
-const messageSchema = new mongoose.Schema({ id: String, senderId: String, receiverId: String, content: String, createdAt: String }, { versionKey: false });
+const messageSchema = new mongoose.Schema({ id: String, senderId: String, receiverId: String, content: String, attachments: [String], createdAt: String }, { versionKey: false });
 const MessageModel = mongoose.model('Message', messageSchema);
 
 // --- Database Seeding ---
@@ -188,6 +189,44 @@ app.get('/api/messages', async (req, res) => res.json(await MessageModel.find({}
 app.post('/api/messages', async (req, res) => {
   const msg = await MessageModel.create(req.body);
   res.status(201).json(msg);
+});
+
+// Emails
+app.post('/api/send-email', async (req, res) => {
+  try {
+    const { to, subject, html, attachments } = req.body;
+    
+    // Create reusable transporter object using the default SMTP transport
+    // This expects environment variables for SMTP configuration
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER, // e.g., your-email@gmail.com
+        pass: process.env.SMTP_PASS, // e.g., app password
+      },
+    });
+
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      return res.status(500).json({ error: 'SMTP credentials not configured in environment variables.' });
+    }
+
+    const mailOptions = {
+        from: `"ERP System" <${process.env.SMTP_USER}>`,
+        to,
+        subject,
+        html,
+        attachments: attachments || [],
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Message sent: %s', info.messageId);
+    res.json({ success: true, messageId: info.messageId });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ error: 'Failed to send email' });
+  }
 });
 
 // Stocks (Batches)

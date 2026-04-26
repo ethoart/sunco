@@ -126,6 +126,7 @@ export interface Message {
   senderId: string; // user id or 'HEAD_OFFICE'
   receiverId: string; // user id, hub id, or 'ALL_HUBS'
   content: string;
+  attachments?: string[]; // array of base64 strings
   createdAt: string;
 }
 

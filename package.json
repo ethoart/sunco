@@ -17,6 +17,7 @@
     "lucide-react": "^0.575.0",
     "mongodb-memory-server": "^11.0.1",
     "mongoose": "^9.4.1",
+    "nodemailer": "^8.0.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-to-print": "^3.3.0",
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.0",
     "@vitejs/plugin-react": "^5.0.0",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

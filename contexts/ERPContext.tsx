@@ -304,6 +304,31 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     if (res.ok) {
       const newReq = await res.json();
       setStockRequests(prev => [...prev, newReq]);
+
+      // Notify Super Admins
+      const superAdmins = users.filter(u => u.role === UserRole.SUPER_ADMIN);
+      const toEmails = superAdmins.map(u => u.email).filter(e => e);
+      if (toEmails.length > 0) {
+          try {
+              const hubName = hubs.find(h => h.id === req.hubId)?.name || req.hubId;
+              const productNames = req.items?.map(i => {
+                  const p = products.find(prod => prod.id === i.productId);
+                  return `${p?.name || i.productId} (x${i.quantity})`;
+              }).join(', ');
+              
+              await fetch('/api/send-email', {
+                 method: 'POST',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                     to: toEmails.join(','),
+                     subject: `System Notification: New Stock Request from ${hubName}`,
+                     html: `<p>A new stock request has been submitted by <b>${hubName}</b>.</p><p><b>Items:</b> ${productNames}</p><p><a href="${window.location.origin}/inventory">View in the ERP</a></p>`,
+                 })
+              });
+          } catch(err) {
+              console.error("Failed to send email notif");
+          }
+      }
     }
   };
 
@@ -316,6 +341,29 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     if (res.ok) {
       const updatedReq = await res.json();
       setStockRequests(prev => prev.map(r => r.id === id ? updatedReq : r));
+
+      if (updates.status && updates.status !== 'PENDING') {
+          const req = stockRequests.find(r => r.id === id);
+          if (req) {
+              const hubUsers = users.filter(u => u.hubId === req.hubId);
+              const toEmails = hubUsers.map(u => u.email).filter(e => e);
+              if (toEmails.length > 0) {
+                   try {
+                       await fetch('/api/send-email', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                              to: toEmails.join(','),
+                              subject: `System Notification: Stock Request ${updates.status}`,
+                              html: `<p>Your stock request has been <b>${updates.status}</b>.</p><p><a href="${window.location.origin}/inventory">View in the ERP</a></p>`,
+                          })
+                       });
+                   } catch(err) {
+                       console.error("Failed to send email notif");
+                   }
+              }
+          }
+      }
     }
   };
 

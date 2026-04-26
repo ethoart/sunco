@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Bell, MessageSquare, Menu, X, ArrowRight, Check } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Bell, MessageSquare, Menu, X, ArrowRight, Check, Paperclip, XCircle } from 'lucide-react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole } from '../types';
 
@@ -13,6 +13,8 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
   const [panelTab, setPanelTab] = useState<'NOTIFS' | 'MESSAGES'>('NOTIFS');
   const [messageText, setMessageText] = useState('');
   const [selectedReceiver, setSelectedReceiver] = useState('PUBLIC');
+  const [attachments, setAttachments] = useState<{name: string, content: string}[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const pendingRequests = stockRequests.filter(r => r.status === 'PENDING');
 
@@ -31,7 +33,7 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
       setLastSeenTime(now);
       localStorage.setItem(`lastSeenPanelTime_${currentUser?.id}`, now);
     }
-  }, [panelOpen]);
+  }, [panelOpen, currentUser?.id]);
 
   const unreadMessagesCount = relevantMessages.filter(m => m.createdAt > lastSeenTime && m.senderId !== currentUser?.id).length;
   const notifCount = (currentUser?.role === UserRole.SUPER_ADMIN ? pendingRequests.length : 0) + unreadMessagesCount;
@@ -47,17 +49,39 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
       updateStockRequest(id, { status: 'REJECTED' });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+          const newFiles = Array.from(e.target.files);
+          newFiles.forEach(file => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                  setAttachments(prev => [...prev, { name: file.name, content: reader.result as string }]);
+              };
+              reader.readAsDataURL(file);
+          });
+      }
+  };
+
+  const removeAttachment = (indexToRemove: number) => {
+      setAttachments(prev => prev.filter((_, index) => index !== indexToRemove));
+  };
+
   const handleSendMessage = () => {
-      if (!messageText.trim()) return;
+      if (!messageText.trim() && attachments.length === 0) return;
       
+      const attsStrings = attachments.map(a => a.content);
+
       addMessage({
           id: `msg-${Date.now()}`,
           senderId: currentUser?.id || 'unknown',
           receiverId: selectedReceiver,
           content: messageText,
+          attachments: attsStrings,
           createdAt: new Date().toISOString()
       });
+      
       setMessageText('');
+      setAttachments([]);
   };
 
   return (
@@ -157,6 +181,19 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                                                 {isMe ? `You (to ${receiverName})` : `${senderName} (to ${receiverName})`}
                                             </div>
                                             <div className="text-sm">{msg.content}</div>
+                                            {msg.attachments && msg.attachments.length > 0 && (
+                                                <div className="mt-2 space-y-1">
+                                                    {msg.attachments.map((att, i) => (
+                                                        <div key={i} className="text-xs">
+                                                            {att.startsWith('data:image') ? (
+                                                                <img src={att} alt="attachment" className="rounded max-h-32 object-contain" />
+                                                            ) : (
+                                                                <a href={att} download="attachment" className="underline break-words">Attachment {i+1}</a>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </div>
                                     )
                                 })}
@@ -180,19 +217,35 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                                 {hubs.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                             </optgroup>
                             <optgroup label="Users">
-                                {users.filter(u => u.id !== currentUser?.id).map(u => <option key={u.id} value={u.id}>{u.name} ({u.role})</option>)}
+                                {users.filter(u => u.id !== currentUser?.id).map(u => <option key={u.id} value={u.id}>{u.username || u.name} ({u.role})</option>)}
                             </optgroup>
                         </select>
-                        <div className="flex items-center space-x-2">
+                        
+                        {attachments.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-2">
+                                {attachments.map((att, i) => (
+                                    <div key={i} className="flex items-center bg-slate-100 rounded-full px-2 py-1 text-xs">
+                                        <span className="truncate max-w-[100px]">{att.name}</span>
+                                        <button onClick={() => removeAttachment(i)} className="ml-1 text-red-500"><XCircle size={14}/></button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className="flex items-center space-x-2 relative">
+                            <input type="file" multiple ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                            <button onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-slate-600">
+                                <Paperclip size={20} />
+                            </button>
                             <input 
                                 type="text"
-                                className="flex-1 p-2 border rounded-lg outline-none text-sm"
+                                className="flex-1 p-2 border rounded-lg outline-none text-sm bg-slate-50 focus:bg-white transition-colors"
                                 placeholder="Type a message..."
                                 value={messageText}
                                 onChange={e => setMessageText(e.target.value)}
                                 onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
                             />
-                            <button onClick={handleSendMessage} className="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800">
+                            <button onClick={handleSendMessage} className={`p-2 rounded-lg text-white transition-colors ${messageText.trim() || attachments.length > 0 ? 'bg-sun-600 hover:bg-sun-700' : 'bg-slate-300 cursor-not-allowed'}`}>
                                 <ArrowRight size={20} />
                             </button>
                         </div>
