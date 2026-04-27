@@ -173,8 +173,8 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                             <div className="flex-1 space-y-3 overflow-y-auto pr-2">
                                 {relevantMessages.map(msg => {
                                     const isMe = msg.senderId === currentUser?.id;
-                                    const senderName = users.find(u => u.id === msg.senderId)?.username || msg.senderId;
-                                    const receiverName = msg.receiverId === 'PUBLIC' ? 'Public' : msg.receiverId === 'ALL_HUBS' ? 'All Hubs' : msg.receiverId === 'HEAD_OFFICE' ? 'Head Office' : hubs.find(h => h.id === msg.receiverId)?.name || users.find(u => u.id === msg.receiverId)?.username || msg.receiverId;
+                                    const senderName = users.find(u => u.id === msg.senderId)?.fullName || users.find(u => u.id === msg.senderId)?.username || msg.senderId;
+                                    const receiverName = msg.receiverId === 'PUBLIC' ? 'Public' : msg.receiverId === 'ALL_HUBS' ? 'All Hubs' : msg.receiverId === 'HEAD_OFFICE' ? 'Head Office' : hubs.find(h => h.id === msg.receiverId)?.name || users.find(u => u.id === msg.receiverId)?.fullName || users.find(u => u.id === msg.receiverId)?.username || msg.receiverId;
                                     return (
                                         <div key={msg.id} className={`p-3 rounded-xl max-w-[80%] flex flex-col ${isMe ? 'bg-sun-600 text-white self-end ml-auto' : 'bg-white border text-slate-800'}`}>
                                             <div className="text-[10px] font-bold mb-1 opacity-70">
@@ -217,7 +217,7 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                                 {hubs.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                             </optgroup>
                             <optgroup label="Users">
-                                {users.filter(u => u.id !== currentUser?.id).map(u => <option key={u.id} value={u.id}>{u.username || u.name} ({u.role})</option>)}
+                                {users.filter(u => u.id !== currentUser?.id).map(u => <option key={u.id} value={u.id}>{u.fullName || u.username} ({u.role})</option>)}
                             </optgroup>
                         </select>
                         
