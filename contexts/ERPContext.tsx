@@ -8,6 +8,8 @@ import {
   INITIAL_CUSTOMERS, HEAD_OFFICE_ID 
 } from '../constants';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 interface ERPContextType {
   currentUser: User | null;
   login: (email: string, password?: string) => boolean;
@@ -87,18 +89,18 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
           customersRes, invoicesRes, transactionsRes, 
           slipsRes, returnsRes, settingsRes, requestsRes, msgsRes
         ] = await Promise.all([
-          fetch('/api/users'),
-          fetch('/api/hubs'),
-          fetch('/api/products'),
-          fetch('/api/stock-batches'),
-          fetch('/api/customers'),
-          fetch('/api/invoices'),
-          fetch('/api/transactions'),
-          fetch('/api/salary-slips'),
-          fetch('/api/return-records'),
-          fetch('/api/settings'),
-          fetch('/api/stock-requests'),
-          fetch('/api/messages')
+          fetch(API_BASE_URL + '/api/users'),
+          fetch(API_BASE_URL + '/api/hubs'),
+          fetch(API_BASE_URL + '/api/products'),
+          fetch(API_BASE_URL + '/api/stock-batches'),
+          fetch(API_BASE_URL + '/api/customers'),
+          fetch(API_BASE_URL + '/api/invoices'),
+          fetch(API_BASE_URL + '/api/transactions'),
+          fetch(API_BASE_URL + '/api/salary-slips'),
+          fetch(API_BASE_URL + '/api/return-records'),
+          fetch(API_BASE_URL + '/api/settings'),
+          fetch(API_BASE_URL + '/api/stock-requests'),
+          fetch(API_BASE_URL + '/api/messages')
         ]);
 
         if (usersRes.ok) {
@@ -141,8 +143,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     const interval = setInterval(async () => {
         try {
             const [requestsRes, msgsRes] = await Promise.all([
-                fetch('/api/stock-requests'),
-                fetch('/api/messages')
+                fetch(API_BASE_URL + '/api/stock-requests'),
+                fetch(API_BASE_URL + '/api/messages')
             ]);
             if (requestsRes.ok) setStockRequests(await requestsRes.json());
             if (msgsRes.ok) setMessages(await msgsRes.json());
@@ -184,7 +186,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addUser = async (user: User) => {
-    const res = await fetch('/api/users', {
+    const res = await fetch(API_BASE_URL + '/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(user)
@@ -196,14 +198,14 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
   
   const removeUser = async (userId: string) => {
-    const res = await fetch(`/api/users/${userId}`, { method: 'DELETE' });
+    const res = await fetch(API_BASE_URL + `/api/users/${userId}`, { method: 'DELETE' });
     if (res.ok) {
       setUsers(prev => prev.filter(u => u.id !== userId));
     }
   };
 
   const updateUser = async (userId: string, updates: Partial<User>) => {
-    const res = await fetch(`/api/users/${userId}`, {
+    const res = await fetch(API_BASE_URL + `/api/users/${userId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -215,7 +217,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addHub = async (hub: Hub) => {
-    const res = await fetch('/api/hubs', {
+    const res = await fetch(API_BASE_URL + '/api/hubs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(hub)
@@ -227,7 +229,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const updateHub = async (hubId: string, updates: Partial<Hub>) => {
-    const res = await fetch(`/api/hubs/${hubId}`, {
+    const res = await fetch(API_BASE_URL + `/api/hubs/${hubId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -239,14 +241,14 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const deleteHub = async (hubId: string) => {
-    const res = await fetch(`/api/hubs/${hubId}`, { method: 'DELETE' });
+    const res = await fetch(API_BASE_URL + `/api/hubs/${hubId}`, { method: 'DELETE' });
     if (res.ok) {
       setHubs(prev => prev.filter(h => h.id !== hubId));
     }
   };
 
   const updateCompanySettings = async (settings: CompanySettings) => {
-    const res = await fetch(`/api/settings/${settings.id}`, {
+    const res = await fetch(API_BASE_URL + `/api/settings/${settings.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(settings)
@@ -266,7 +268,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addStockBatch = async (batch: StockBatch) => {
-    const res = await fetch('/api/stock-batches', {
+    const res = await fetch(API_BASE_URL + '/api/stock-batches', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(batch)
@@ -278,7 +280,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const transferStock = async (items: { productId: string, qty: number }[], fromHubId: string, toHubId: string) => {
-    const res = await fetch('/api/stock-batches/transfer', {
+    const res = await fetch(API_BASE_URL + '/api/stock-batches/transfer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ items, fromHubId, toHubId })
@@ -286,7 +288,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     
     if (res.ok) {
       // Refetch stocks to get updated quantities
-      const stocksRes = await fetch('/api/stock-batches');
+      const stocksRes = await fetch(API_BASE_URL + '/api/stock-batches');
       if (stocksRes.ok) {
         setStockBatches(await stocksRes.json());
       }
@@ -296,7 +298,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addStockRequest = async (req: Partial<StockRequest>) => {
-    const res = await fetch('/api/stock-requests', {
+    const res = await fetch(API_BASE_URL + '/api/stock-requests', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req)
@@ -316,7 +318,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
                   return `${p?.name || i.productId} (x${i.quantity})`;
               }).join(', ');
               
-              await fetch('/api/send-email', {
+              await fetch(API_BASE_URL + '/api/send-email', {
                  method: 'POST',
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify({
@@ -333,7 +335,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const updateStockRequest = async (id: string, updates: Partial<StockRequest>) => {
-    const res = await fetch(`/api/stock-requests/${id}`, {
+    const res = await fetch(API_BASE_URL + `/api/stock-requests/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -349,7 +351,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
               const toEmails = hubUsers.map(u => u.email).filter(e => e);
               if (toEmails.length > 0) {
                    try {
-                       await fetch('/api/send-email', {
+                       await fetch(API_BASE_URL + '/api/send-email', {
                           method: 'POST',
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
@@ -368,7 +370,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addMessage = async (msg: Partial<Message>) => {
-    const res = await fetch('/api/messages', {
+    const res = await fetch(API_BASE_URL + '/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(msg)
@@ -380,7 +382,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addCustomer = async (customer: Customer) => {
-    const res = await fetch('/api/customers', {
+    const res = await fetch(API_BASE_URL + '/api/customers', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(customer)
@@ -392,7 +394,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
   
   const updateCustomer = async (customerId: string, updates: Partial<Customer>) => {
-    const res = await fetch(`/api/customers/${customerId}`, {
+    const res = await fetch(API_BASE_URL + `/api/customers/${customerId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -404,14 +406,14 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const deleteCustomer = async (customerId: string) => {
-    const res = await fetch(`/api/customers/${customerId}`, { method: 'DELETE' });
+    const res = await fetch(API_BASE_URL + `/api/customers/${customerId}`, { method: 'DELETE' });
     if (res.ok) {
       setCustomers(prev => prev.filter(c => c.id !== customerId));
     }
   };
 
   const createInvoice = async (invoice: Invoice) => {
-    const res = await fetch('/api/invoices', {
+    const res = await fetch(API_BASE_URL + '/api/invoices', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(invoice)
@@ -423,11 +425,11 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       setTransactions(prev => [...prev, transaction]);
       
       // Refetch stocks as they are deducted on server
-      const stocksRes = await fetch('/api/stock-batches');
+      const stocksRes = await fetch(API_BASE_URL + '/api/stock-batches');
       if (stocksRes.ok) {
         setStockBatches(await stocksRes.json());
       }
-      const returnsRes = await fetch('/api/return-records');
+      const returnsRes = await fetch(API_BASE_URL + '/api/return-records');
       if (returnsRes.ok) {
         setReturnRecords(await returnsRes.json());
       }
@@ -439,14 +441,14 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const deleteInvoice = async (invoiceId: string) => {
-    const res = await fetch(`/api/invoices/${invoiceId}`, { method: 'DELETE' });
+    const res = await fetch(API_BASE_URL + `/api/invoices/${invoiceId}`, { method: 'DELETE' });
     if (res.ok) {
       setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
     }
   };
 
   const updateInvoice = async (invoiceId: string, updates: Partial<Invoice>) => {
-    const res = await fetch(`/api/invoices/${invoiceId}`, {
+    const res = await fetch(API_BASE_URL + `/api/invoices/${invoiceId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates)
@@ -458,7 +460,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addTransaction = async (transaction: Transaction) => {
-    const res = await fetch('/api/transactions', {
+    const res = await fetch(API_BASE_URL + '/api/transactions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(transaction)
@@ -470,7 +472,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
   
   const addSalarySlip = async (slip: SalarySlip) => {
-    const res = await fetch('/api/salary-slips', {
+    const res = await fetch(API_BASE_URL + '/api/salary-slips', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(slip)
@@ -483,7 +485,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addProduct = async (product: Product) => {
-    const res = await fetch('/api/products', {
+    const res = await fetch(API_BASE_URL + '/api/products', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(product)
@@ -495,7 +497,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   };
 
   const addReturnRecord = async (record: ReturnRecord) => {
-    const res = await fetch('/api/return-records', {
+    const res = await fetch(API_BASE_URL + '/api/return-records', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(record)
@@ -507,7 +509,7 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       
       // Refetch stocks if deduction happened
       if (record.reason === 'EXPIRED' || record.reason === 'DAMAGED_BOX') {
-        const stocksRes = await fetch('/api/stock-batches');
+        const stocksRes = await fetch(API_BASE_URL + '/api/stock-batches');
         if (stocksRes.ok) {
           setStockBatches(await stocksRes.json());
         }
