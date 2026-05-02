@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import nodemailer from 'nodemailer';
+import cors from 'cors';
 import { 
   User, Hub, Product, StockBatch, Invoice, Customer, Transaction, SalarySlip, ReturnRecord, UserRole 
 } from './types';
@@ -16,6 +17,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
+app.use(cors());
 app.use(express.json());
 
 import { MongoMemoryServer } from 'mongodb-memory-server';
