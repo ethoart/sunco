@@ -20,7 +20,8 @@ jobs:
 
       - name: Build Web
         env:
-          VITE_API_BASE_URL: https://ais-pre-jsrhebuu4mkb7bwagfoj6p-181219863575.asia-east1.run.app
+          NODE_OPTIONS: --max_old_space_size=4096
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: npm run build
 
       - name: Sync Capacitor
