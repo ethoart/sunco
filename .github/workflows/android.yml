@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Web
         env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://ais-pre-jsrhebuu4mkb7bwagfoj6p-181219863575.asia-east1.run.app' }}
+          VITE_API_BASE_URL: https://ais-pre-jsrhebuu4mkb7bwagfoj6p-181219863575.asia-east1.run.app
         run: npm run build
 
       - name: Sync Capacitor
