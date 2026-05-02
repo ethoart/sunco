@@ -5,6 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Sun Cola ERP',
   webDir: 'dist',
   server: {
+    url: 'https://suncola.hyperoms.xyz/',
+    allowNavigation: [
+      '*.cloudflareaccess.com',
+      'suncola.hyperoms.xyz'
+    ],
     androidScheme: 'https',
     cleartextTraffic: true
   },
