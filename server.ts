@@ -17,7 +17,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 import { MongoMemoryServer } from 'mongodb-memory-server';
