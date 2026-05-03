@@ -11,7 +11,7 @@ const config: CapacitorConfig = {
       'suncola.hyperoms.xyz'
     ],
     androidScheme: 'https',
-    cleartextTraffic: true
+    cleartext: true
   },
   plugins: {
     SplashScreen: {

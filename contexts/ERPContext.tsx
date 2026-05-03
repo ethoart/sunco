@@ -8,7 +8,10 @@ import {
   INITIAL_CUSTOMERS, HEAD_OFFICE_ID 
 } from '../constants';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = window.location.hostname === 'suncola.hyperoms.xyz' 
+  ? 'https://suncola.hyperoms.xyz' 
+// @ts-ignore
+  : (import.meta.env.VITE_API_BASE_URL || (window.location.protocol + '//' + window.location.host));
 
 interface ERPContextType {
   currentUser: User | null;
@@ -171,7 +174,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
   }, [stockBatches]);
 
   const login = (email: string, password?: string) => {
-    const user = users.find(u => u.email === email && (password ? u.password === password : true));
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = users.find(u => u.email.trim().toLowerCase() === normalizedEmail && (password ? u.password === password : true));
     if (user) {
       setCurrentUser(user);
       localStorage.setItem('currentUser', JSON.stringify(user));

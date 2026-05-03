@@ -38,9 +38,12 @@ const LoginPage = () => {
             <input 
               type="email" 
               className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
-              placeholder="add your email text"
+              placeholder="admin@suncola.com"
               value={email}
               onChange={e => setEmail(e.target.value)}
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
             />
           </div>
           <div>
@@ -51,6 +54,8 @@ const LoginPage = () => {
               placeholder="••••••••"
               value={password}
               onChange={e => setPassword(e.target.value)}
+              autoCapitalize="none"
+              autoCorrect="off"
             />
           </div>
           {error && <p className="text-red-500 text-sm text-center">{error}</p>}
