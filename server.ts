@@ -5,8 +5,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
-import pkg from 'whatsapp-web.js';
-const { Client, LocalAuth } = pkg;
+import * as baileysPkg from '@whiskeysockets/baileys';
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = baileysPkg;
 import qrcode from 'qrcode';
 
 import { 
@@ -138,39 +138,44 @@ let waClient: any = null;
 let waQr: string | null = null;
 let waStatus: string = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, QR_READY, CONNECTED
 
-function initWhatsApp() {
+async function initWhatsApp() {
     if (waClient) return;
     waStatus = 'CONNECTING';
-    waClient = new Client({
-        authStrategy: new LocalAuth(),
-        puppeteer: {
-            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote', '--single-process', '--disable-gpu']
+    const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
+
+    waClient = makeWASocket({
+        auth: state,
+        printQRInTerminal: false,
+    });
+
+    waClient.ev.on('creds.update', saveCreds);
+
+    waClient.ev.on('connection.update', (update: any) => {
+        const { connection, lastDisconnect, qr } = update;
+        if (qr) {
+            waQr = qr;
+            waStatus = 'QR_READY';
         }
-    });
-
-    waClient.on('qr', (qr) => {
-        waQr = qr;
-        waStatus = 'QR_READY';
-    });
-
-    waClient.on('ready', () => {
-        waStatus = 'CONNECTED';
-        waQr = null;
-        console.log('WhatsApp is ready!');
-    });
-
-    waClient.on('disconnected', () => {
-        waStatus = 'DISCONNECTED';
-        if (waClient) {
-            waClient.destroy().catch(() => {});
+        if (connection === 'close') {
+            const shouldReconnect = (lastDisconnect.error as any)?.output?.statusCode !== DisconnectReason.loggedOut;
+            console.log('WhatsApp connection closed, reconnecting:', shouldReconnect);
+            if (shouldReconnect) {
+                waClient = null;
+                initWhatsApp();
+            } else {
+                waStatus = 'DISCONNECTED';
+                waQr = null;
+                waClient = null;
+                // Delete auth info if logged out to allow scan again
+                try {
+                     fs.rmSync('baileys_auth_info', { recursive: true, force: true });
+                } catch(e) {}
+            }
+        } else if (connection === 'open') {
+            waStatus = 'CONNECTED';
+            waQr = null;
+            console.log('WhatsApp is ready!');
         }
-        waClient = null;
-    });
-
-    waClient.initialize().catch(err => {
-        console.error('WhatsApp init error', err);
-        waStatus = 'DISCONNECTED';
-        waClient = null;
     });
 }
 
@@ -235,6 +240,9 @@ app.post('/api/whatsapp/logout', async (req, res) => {
     if (waClient) {
         try {
             await waClient.logout();
+            try {
+                 fs.rmSync('baileys_auth_info', { recursive: true, force: true });
+            } catch(e) {}
         } catch (e) {}
         waClient = null;
         waStatus = 'DISCONNECTED';
@@ -258,9 +266,10 @@ app.post('/api/whatsapp/send', async (req, res) => {
         }
         formattedPhone = formattedPhone.replace(/\D/g, ''); // Remove non numerical
 
-        const numberDetail = await waClient.getNumberId(formattedPhone);
-        if (numberDetail) {
-            await waClient.sendMessage(numberDetail._serialized, message);
+        const jid = `${formattedPhone}@s.whatsapp.net`;
+        const [result] = await waClient.onWhatsApp(jid);
+        if (result?.exists) {
+            await waClient.sendMessage(jid, { text: message });
             res.json({ success: true });
         } else {
             res.status(400).json({ error: 'Mobile number is not registered on WhatsApp' });
@@ -467,15 +476,16 @@ app.post('/api/invoices', async (req, res) => {
               let formattedPhone = customer.phone;
               if (formattedPhone.startsWith('0')) formattedPhone = '94' + formattedPhone.substring(1);
               formattedPhone = formattedPhone.replace(/\D/g, '');
-              const numberDetail = await waClient.getNumberId(formattedPhone);
+              const jid = `${formattedPhone}@s.whatsapp.net`;
+              const [result] = await waClient.onWhatsApp(jid);
               
-              if (numberDetail) {
+              if (result?.exists) {
                  const message = invoice.status === 'RETURN' 
                    ? `*Sun Cola Return Receipt*\nReceipt No: ${invoice.id}\nDate: ${new Date(invoice.date).toLocaleDateString()}\nStatus: Refund Issued.\nThank you!`
                    : `*Sun Cola Invoice*\nInvoice No: ${invoice.id}\nDate: ${new Date(invoice.date).toLocaleDateString()}\nTotal Amount: Rs. ${invoice.totalAmount.toFixed(2)}\n\nThank you for your business!`;
                  
                  // Send asynchronously
-                 waClient.sendMessage(numberDetail._serialized, message).catch(console.error);
+                 waClient.sendMessage(jid, { text: message }).catch(console.error);
               }
           }
       } catch (err) {
