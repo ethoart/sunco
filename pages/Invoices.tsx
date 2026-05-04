@@ -81,6 +81,7 @@ const Invoices = () => {
   // Creation/Edit State
   const [newCustType, setNewCustType] = useState<'EXISTING' | 'NEW'>('EXISTING');
   const [selectedCustId, setSelectedCustId] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [guestDetails, setGuestDetails] = useState({ name: '', phone: '', address: '' });
   const [cart, setCart] = useState<InvoiceItem[]>([]);
   const [isReturnReceipt, setIsReturnReceipt] = useState(false);
@@ -438,17 +439,31 @@ const Invoices = () => {
                      </div>
 
                      {newCustType === 'EXISTING' ? (
-                         <select 
-                            className="w-full p-2 border border-slate-300 rounded-lg outline-none bg-white text-black"
-                            value={selectedCustId}
-                            onChange={(e) => setSelectedCustId(e.target.value)}
-                         >
-                             <option value="">Select Customer</option>
-                             {customers
-                                .map(c => (
-                                 <option key={c.id} value={c.id}>{c.name} - {c.shopName} ({c.status})</option>
-                             ))}
-                         </select>
+                         <div className="space-y-3">
+                             <div className="relative">
+                                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                                 <input 
+                                     type="text" 
+                                     placeholder="Search existing customer..." 
+                                     className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-sun-500 outline-none bg-white text-black"
+                                     value={customerSearchTerm}
+                                     onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                                 />
+                             </div>
+                             <select 
+                                className="w-full p-2 border border-slate-300 rounded-lg outline-none bg-white text-black h-40"
+                                value={selectedCustId}
+                                size={5}
+                                onChange={(e) => setSelectedCustId(e.target.value)}
+                             >
+                                 <option value="">Select Customer</option>
+                                 {customers
+                                    .filter(c => c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) || (c.shopName && c.shopName.toLowerCase().includes(customerSearchTerm.toLowerCase())))
+                                    .map(c => (
+                                     <option key={c.id} value={c.id}>{c.name} - {c.shopName} ({c.status})</option>
+                                 ))}
+                             </select>
+                         </div>
                      ) : (
                          <div className="space-y-3">
                              <input 

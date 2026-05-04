@@ -7,7 +7,7 @@
     "dev": "tsx server.ts",
     "start": "NODE_ENV=production tsx server.ts",
     "build": "vite build",
-    "generate-assets": "capacitor-assets generate",
+    "generate-assets": "capacitor-assets generate --android && node -e \"const fs=require('fs'); fs.rmSync('android/app/src/main/res/mipmap-anydpi-v26', {recursive:true, force:true});\"",
     "preview": "vite preview",
     "lint": "tsc --noEmit"
   },
