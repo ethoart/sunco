@@ -133,7 +133,7 @@ async function seedDatabase() {
 }
 
 // --- WhatsApp Client Setup ---
-let waClient: Client | null = null;
+let waClient: any = null;
 let waQr: string | null = null;
 let waStatus: string = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, QR_READY, CONNECTED
 
