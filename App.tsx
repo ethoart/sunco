@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ERPProvider, useERP } from './contexts/ERPContext';
 import Sidebar from './components/Sidebar';
 import TopBar from './components/TopBar';
+import BottomNav from './components/BottomNav';
 import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
 import Invoices from './pages/Invoices';
@@ -106,9 +107,18 @@ const MainLayout = () => {
         </div>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 print:p-0 print:overflow-visible">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 print:p-0 print:overflow-visible">
           {renderPage()}
         </main>
+      </div>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="no-print print:hidden">
+        <BottomNav 
+          currentPage={currentPage}
+          setPage={setCurrentPage}
+          setSidebarOpen={setSidebarOpen}
+        />
       </div>
     </div>
   );

@@ -88,12 +88,8 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
     <>
     <div className="bg-white px-4 md:px-8 py-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
       <div className="flex items-center">
-        <button onClick={() => setSidebarOpen(true)} className="mr-4 md:hidden text-slate-500 hover:bg-slate-50 p-2 rounded-xl">
-          <Menu size={24} />
-        </button>
-        
         {/* Brand Name */}
-        <div className="font-bold text-xl text-slate-800">Sun Cola</div>
+        <div className="font-bold text-lg md:text-xl text-slate-800">Sun Cola</div>
       </div>
 
       {/* Right Actions */}
