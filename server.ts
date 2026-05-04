@@ -5,6 +5,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
+import { Client, LocalAuth } from 'whatsapp-web.js';
+import qrcode from 'qrcode';
+
 import { 
   User, Hub, Product, StockBatch, Invoice, Customer, Transaction, SalarySlip, ReturnRecord, UserRole 
 } from './types';
@@ -129,6 +132,47 @@ async function seedDatabase() {
   }
 }
 
+// --- WhatsApp Client Setup ---
+let waClient: Client | null = null;
+let waQr: string | null = null;
+let waStatus: string = 'DISCONNECTED'; // DISCONNECTED, CONNECTING, QR_READY, CONNECTED
+
+function initWhatsApp() {
+    if (waClient) return;
+    waStatus = 'CONNECTING';
+    waClient = new Client({
+        authStrategy: new LocalAuth(),
+        puppeteer: {
+            args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-accelerated-2d-canvas', '--no-first-run', '--no-zygote', '--single-process', '--disable-gpu']
+        }
+    });
+
+    waClient.on('qr', (qr) => {
+        waQr = qr;
+        waStatus = 'QR_READY';
+    });
+
+    waClient.on('ready', () => {
+        waStatus = 'CONNECTED';
+        waQr = null;
+        console.log('WhatsApp is ready!');
+    });
+
+    waClient.on('disconnected', () => {
+        waStatus = 'DISCONNECTED';
+        if (waClient) {
+            waClient.destroy().catch(() => {});
+        }
+        waClient = null;
+    });
+
+    waClient.initialize().catch(err => {
+        console.error('WhatsApp init error', err);
+        waStatus = 'DISCONNECTED';
+        waClient = null;
+    });
+}
+
 // --- API Routes ---
 
 // Users
@@ -166,6 +210,64 @@ app.get('/api/settings', async (req, res) => res.json(await SettingModel.find({}
 app.put('/api/settings/:id', async (req, res) => {
   const setting = await SettingModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true, upsert: true });
   res.json(setting);
+});
+
+// WhatsApp API Routes
+app.post('/api/whatsapp/init', (req, res) => {
+    initWhatsApp();
+    res.json({ status: waStatus });
+});
+
+app.get('/api/whatsapp/status', async (req, res) => {
+    if (waStatus === 'QR_READY' && waQr) {
+        try {
+            const qrDataUrl = await qrcode.toDataURL(waQr);
+            return res.json({ status: waStatus, qr: qrDataUrl });
+        } catch (e) {
+            return res.json({ status: waStatus, qr: null });
+        }
+    }
+    res.json({ status: waStatus });
+});
+
+app.post('/api/whatsapp/logout', async (req, res) => {
+    if (waClient) {
+        try {
+            await waClient.logout();
+        } catch (e) {}
+        waClient = null;
+        waStatus = 'DISCONNECTED';
+        waQr = null;
+    }
+    res.json({ status: waStatus });
+});
+
+app.post('/api/whatsapp/send', async (req, res) => {
+    if (waStatus !== 'CONNECTED' || !waClient) {
+        return res.status(400).json({ error: 'WhatsApp not connected' });
+    }
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+        return res.status(400).json({ error: 'Phone and message are required' });
+    }
+    try {
+        let formattedPhone = phone;
+        if (formattedPhone.startsWith('0')) {
+            formattedPhone = '94' + formattedPhone.substring(1); // Assuming Sri lanka by default
+        }
+        formattedPhone = formattedPhone.replace(/\D/g, ''); // Remove non numerical
+
+        const numberDetail = await waClient.getNumberId(formattedPhone);
+        if (numberDetail) {
+            await waClient.sendMessage(numberDetail._serialized, message);
+            res.json({ success: true });
+        } else {
+            res.status(400).json({ error: 'Mobile number is not registered on WhatsApp' });
+        }
+    } catch (error) {
+        console.error('WhatsApp send error:', error);
+        res.status(500).json({ error: 'Failed to send message' });
+    }
 });
 
 // Products
@@ -355,6 +457,30 @@ app.post('/api/invoices', async (req, res) => {
       id: `txn-${Date.now()}`, date: new Date().toISOString(), type: invoice.status === 'RETURN' ? 'EXPENSE' : 'INCOME', category: invoice.status === 'RETURN' ? 'OTHER' : 'SALES',
       amount: Math.abs(invoice.totalAmount), description: invoice.status === 'RETURN' ? `Invoice #${invoice.id} refund` : `Invoice #${invoice.id} payment`, hubId: invoice.hubId
   });
+
+  // Try to send WhatsApp message if customer exists and has phone
+  if (waStatus === 'CONNECTED' && waClient && invoice.customerId) {
+      try {
+          const customer = await CustomerModel.findOne({ id: invoice.customerId });
+          if (customer && customer.phone) {
+              let formattedPhone = customer.phone;
+              if (formattedPhone.startsWith('0')) formattedPhone = '94' + formattedPhone.substring(1);
+              formattedPhone = formattedPhone.replace(/\D/g, '');
+              const numberDetail = await waClient.getNumberId(formattedPhone);
+              
+              if (numberDetail) {
+                 const message = invoice.status === 'RETURN' 
+                   ? `*Sun Cola Return Receipt*\nReceipt No: ${invoice.id}\nDate: ${new Date(invoice.date).toLocaleDateString()}\nStatus: Refund Issued.\nThank you!`
+                   : `*Sun Cola Invoice*\nInvoice No: ${invoice.id}\nDate: ${new Date(invoice.date).toLocaleDateString()}\nTotal Amount: Rs. ${invoice.totalAmount.toFixed(2)}\n\nThank you for your business!`;
+                 
+                 // Send asynchronously
+                 waClient.sendMessage(numberDetail._serialized, message).catch(console.error);
+              }
+          }
+      } catch (err) {
+          console.error('Error auto-sending invoice via WA:', err);
+      }
+  }
 
   res.status(201).json({ invoice: newInvoice, transaction });
 });

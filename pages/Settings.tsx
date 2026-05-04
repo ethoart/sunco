@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { CompanySettings, Hub, UserRole } from '../types';
-import { Building2, Plus, Edit, Trash2 } from 'lucide-react';
+import { Building2, Plus, Edit, Trash2, Smartphone, QrCode, PowerOff } from 'lucide-react';
 
 const SettingsPage = () => {
   const { 
@@ -11,10 +11,11 @@ const SettingsPage = () => {
     hubs,
     addHub,
     updateHub,
-    deleteHub 
+    deleteHub,
+    API_BASE_URL
   } = useERP();
 
-  const [activeTab, setActiveTab] = useState<'COMPANY' | 'HUBS'>('COMPANY');
+  const [activeTab, setActiveTab] = useState<'COMPANY' | 'HUBS' | 'WHATSAPP'>('COMPANY');
 
   // Company Settings State
   const [compName, setCompName] = useState(companySettings?.companyName || '');
@@ -30,6 +31,45 @@ const SettingsPage = () => {
   const [isEditingHub, setIsEditingHub] = useState<Hub | null>(null);
   const [hubName, setHubName] = useState('');
   const [hubLocation, setHubLocation] = useState('');
+
+  // WhatsApp State
+  const [waStatus, setWaStatus] = useState<string>('DISCONNECTED');
+  const [waQr, setWaQr] = useState<string | null>(null);
+
+  // Fetch WhatsApp Status periodically if on WhatsApp tab
+  useEffect(() => {
+     let interval: any;
+     if (activeTab === 'WHATSAPP') {
+         const fetchStatus = async () => {
+             try {
+                const res = await fetch(API_BASE_URL + '/api/whatsapp/status');
+                const data = await res.json();
+                setWaStatus(data.status);
+                if (data.qr) setWaQr(data.qr);
+             } catch (e) {}
+         };
+         fetchStatus();
+         interval = setInterval(fetchStatus, 3000);
+     }
+     return () => clearInterval(interval);
+  }, [activeTab, API_BASE_URL]);
+
+  const initWhatsApp = async () => {
+      try {
+          const res = await fetch(API_BASE_URL + '/api/whatsapp/init', { method: 'POST' });
+          const data = await res.json();
+          setWaStatus(data.status);
+      } catch (e) {}
+  };
+
+  const logoutWhatsApp = async () => {
+      try {
+          const res = await fetch(API_BASE_URL + '/api/whatsapp/logout', { method: 'POST' });
+          const data = await res.json();
+          setWaStatus(data.status);
+          setWaQr(null);
+      } catch (e) {}
+  };
 
   // Fallback check: only SUPER_ADMIN should be here (optional, handled visually)
   if (currentUser?.role !== UserRole.SUPER_ADMIN) {
@@ -118,6 +158,13 @@ const SettingsPage = () => {
           className={`py-3 px-6 font-medium text-sm transition-colors border-b-2 ${activeTab === 'HUBS' ? 'border-sun-600 text-sun-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
         >
           Branches / Hubs
+        </button>
+        <button
+          onClick={() => setActiveTab('WHATSAPP')}
+          className={`py-3 px-6 font-medium text-sm transition-colors border-b-2 flex items-center space-x-2 ${activeTab === 'WHATSAPP' ? 'border-sun-600 text-sun-600' : 'border-transparent text-slate-500 hover:text-slate-800'}`}
+        >
+          <Smartphone size={18} />
+          <span>WhatsApp Setup</span>
         </button>
       </div>
 
@@ -248,6 +295,63 @@ const SettingsPage = () => {
               </table>
             </div>
 
+          </div>
+        )}
+
+        {activeTab === 'WHATSAPP' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-slate-800 flex items-center">
+                <Smartphone className="mr-2 h-5 w-5 text-green-500" />
+                WhatsApp API Integration
+              </h2>
+            </div>
+            
+            <div className="bg-slate-50 p-6 rounded-xl border border-slate-100 max-w-xl text-center space-y-4">
+               <div>
+                  <h3 className="text-md font-bold text-slate-800">Connection Status</h3>
+                  <div className={`mt-2 inline-block px-4 py-1 rounded-full text-sm font-medium border ${
+                      waStatus === 'CONNECTED' ? 'bg-green-100 text-green-700 border-green-200' : 
+                      waStatus === 'QR_READY' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                      waStatus === 'CONNECTING' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                      'bg-slate-200 text-slate-700 border-slate-300'
+                  }`}>
+                      {waStatus}
+                  </div>
+               </div>
+
+               {waStatus === 'DISCONNECTED' && (
+                  <div>
+                      <p className="text-sm text-slate-500 mb-4">Initialize the WhatsApp client to generate a QR code for login. Keep your phone ready.</p>
+                      <button onClick={initWhatsApp} className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition inline-flex items-center">
+                          <QrCode className="mr-2 h-4 w-4" /> Generate QR Code
+                      </button>
+                  </div>
+               )}
+
+               {waStatus === 'CONNECTING' && (
+                   <p className="text-sm text-slate-500">Initializing browser session, please wait...</p>
+               )}
+
+               {waStatus === 'QR_READY' && waQr && (
+                   <div className="flex flex-col items-center">
+                      <p className="text-sm text-slate-500 mb-2">Scan this QR code using WhatsApp on your phone (Linked Devices):</p>
+                      <img src={waQr} alt="WhatsApp QR Code" className="w-64 h-64 border-4 border-white rounded-xl shadow-sm" />
+                   </div>
+               )}
+
+               {waStatus === 'CONNECTED' && (
+                   <div className="flex flex-col items-center space-y-4">
+                      <p className="text-sm text-green-600 font-medium">WhatsApp is connected and ready to send invoices!</p>
+                      <button onClick={logoutWhatsApp} className="px-6 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg transition inline-flex items-center">
+                          <PowerOff className="mr-2 h-4 w-4" /> Disconnect Device
+                      </button>
+                   </div>
+               )}
+            </div>
+            <p className="text-xs text-slate-400 mt-4 max-w-xl">
+               Note: To minimize server resource usage, WhatsApp uses an internal headless browser. If the application environment restarts, you may need to scan the QR code again.
+            </p>
           </div>
         )}
 
