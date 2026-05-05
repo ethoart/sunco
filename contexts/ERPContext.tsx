@@ -53,6 +53,7 @@ interface ERPContextType {
   formatCurrency: (amount: number) => string;
   companySettings: CompanySettings | null;
   updateCompanySettings: (settings: CompanySettings) => void;
+  API_BASE_URL: string;
 }
 
 const ERPContext = createContext<ERPContextType | undefined>(undefined);
@@ -535,7 +536,8 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       transactions, addTransaction,
       salarySlips, addSalarySlip,
       returnRecords, addReturnRecord,
-      formatCurrency, companySettings, updateCompanySettings
+      formatCurrency, companySettings, updateCompanySettings,
+      API_BASE_URL
     }}>
       {children}
     </ERPContext.Provider>
