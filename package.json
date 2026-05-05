@@ -1,5 +1,44 @@
 {
+  "name": "sun-cola-erp",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "start": "NODE_ENV=production tsx server.ts",
+    "build": "vite build",
+    "generate-assets": "capacitor-assets generate --android && node -e \"const fs=require('fs'); fs.rmSync('android/app/src/main/res/mipmap-anydpi-v26', {recursive:true, force:true});\"",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit"
+  },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.6.0"
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/splash-screen": "^8.0.1",
+    "@google/genai": "^1.42.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "lucide-react": "^0.575.0",
+    "mongodb-memory-server": "^11.0.1",
+    "mongoose": "^9.4.1",
+    "nodemailer": "^8.0.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-to-print": "^3.3.0",
+    "recharts": "^3.7.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.3.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "sharp": "^0.34.5",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
   }
 }

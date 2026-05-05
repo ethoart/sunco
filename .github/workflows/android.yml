@@ -1,0 +1,52 @@
+name: Build Android APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web
+        env:
+          NODE_OPTIONS: --max_old_space_size=4096
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://ais-pre-jsrhebuu4mkb7bwagfoj6p-181219863575.asia-east1.run.app' }}
+        run: npm run build
+
+      - name: Generate Icons & Splash
+        run: npm run generate-assets
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Make Gradle script executable
+        run: chmod +x ./android/gradlew
+
+      - name: Build APK
+        working-directory: android
+        run: |
+          gradle wrapper
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
