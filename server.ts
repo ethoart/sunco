@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
