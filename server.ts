@@ -143,9 +143,11 @@ async function initWhatsApp() {
     waStatus = 'CONNECTING';
     const { state, saveCreds } = await useMultiFileAuthState('baileys_auth_info');
 
+    const pino = (await import('pino')).default;
     waClient = makeWASocket({
         auth: state,
-        printQRInTerminal: false,
+        printQRInTerminal: true,
+        logger: pino({ level: 'debug' })
     });
 
     waClient.ev.on('creds.update', saveCreds);
