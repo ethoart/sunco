@@ -6,7 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SalarySlipTemplate } from '../components/SalarySlipTemplate';
 
 const Finance = () => {
-  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction, invoices } = useERP();
+  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction, invoices, companySettings } = useERP();
   const [activeTab, setActiveTab] = useState<'PNL' | 'SALARY' | 'EXPENSES'>('PNL');
   
   // Salary Form
@@ -56,8 +56,6 @@ const Finance = () => {
       { name: 'Income', value: totalIncome, color: '#10b981' },
       { name: 'Expense', value: totalExpense, color: '#ef4444' }
   ];
-
-  const { companySettings } = useERP();
 
   // Hub-wise Aggregation (Only for SA/FM)
   const hubStats = hubs.map(hub => {
@@ -197,6 +195,7 @@ const Finance = () => {
                 slip={slip} 
                 employee={users.find(u => u.fullName === slip.employeeName)} // Simple match for demo
                 hub={hubs.find(h => h.id === slip.hubId)}
+                companySettings={companySettings}
             />
         ))}
       </div>

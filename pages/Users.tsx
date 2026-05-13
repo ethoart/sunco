@@ -7,6 +7,8 @@ const UsersPage = () => {
   const { users, addUser, removeUser, updateUser, hubs, currentUser, formatCurrency } = useERP();
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  const uniqueAreas = Array.from(new Set(users.map(u => u.area).filter(Boolean))) as string[];
   
   // Form State for New User
   const [newUser, setNewUser] = useState<Partial<User>>({
@@ -18,6 +20,7 @@ const UsersPage = () => {
       hubId: '',
       jobTitle: '',
       employeeId: '',
+      area: '',
       basicSalary: 0,
       bonuses: 0
   });
@@ -45,6 +48,7 @@ const UsersPage = () => {
           role: newUser.role as UserRole,
           jobTitle: newUser.jobTitle || 'Staff',
           hubId: newUser.role === UserRole.SUPER_ADMIN || newUser.role === UserRole.FINANCIAL_MANAGER ? undefined : (newUser.hubId || currentUser?.hubId),
+          area: newUser.role === UserRole.STAFF ? newUser.area : undefined,
           permissions: [],
           phone: '',
           basicSalary: newUser.basicSalary || 0,
@@ -53,7 +57,7 @@ const UsersPage = () => {
       setShowForm(false);
       setNewUser({ 
         username: '', email: '', password: '', fullName: '', 
-        role: UserRole.STAFF, hubId: '', jobTitle: '', employeeId: '',
+        role: UserRole.STAFF, hubId: '', jobTitle: '', employeeId: '', area: '',
         basicSalary: 0, bonuses: 0
       });
   };
@@ -72,6 +76,7 @@ const UsersPage = () => {
         updates.hubId = editingUser.hubId;
         updates.jobTitle = editingUser.jobTitle;
         updates.employeeId = editingUser.employeeId;
+        updates.area = editingUser.area;
         updates.basicSalary = editingUser.basicSalary;
         updates.bonuses = editingUser.bonuses;
         // Password update could be added here if needed
@@ -162,6 +167,24 @@ const UsersPage = () => {
                       </select>
                   )}
 
+                  {/* Area Selection for Staff */}
+                  {newUser.role === UserRole.STAFF && (
+                      <div className="relative">
+                        <input 
+                          list="user-area-options"
+                          placeholder="Sales Area (e.g. Galle)" 
+                          className="w-full p-2 border border-slate-300 rounded-lg bg-white text-black"
+                          value={newUser.area || ''} 
+                          onChange={e => setNewUser({...newUser, area: e.target.value})}
+                        />
+                        <datalist id="user-area-options">
+                            {uniqueAreas.map(area => (
+                                <option key={area} value={area} />
+                            ))}
+                        </datalist>
+                      </div>
+                  )}
+
                   {canManageSalary && (
                     <>
                       <input 
@@ -223,6 +246,22 @@ const UsersPage = () => {
                                 <option value="">Select Hub</option>
                                 {hubs.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
                             </select>
+                        </div>
+                    )}
+                    {editingUser.role === UserRole.STAFF && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Area</label>
+                            <input 
+                              list="edit-user-area-options"
+                              className="w-full p-2 border rounded-lg" 
+                              value={editingUser.area || ''} 
+                              onChange={e => setEditingUser({...editingUser, area: e.target.value})} 
+                            />
+                            <datalist id="edit-user-area-options">
+                                {uniqueAreas.map(area => (
+                                    <option key={area} value={area} />
+                                ))}
+                            </datalist>
                         </div>
                     )}
                   </>
@@ -293,7 +332,14 @@ const UsersPage = () => {
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {users.map(user => (
+          {users.filter(u => {
+              if (isSuperAdmin) return true;
+              if (isHubAdmin) {
+                  return u.hubId === currentUser?.hubId && u.role === UserRole.STAFF;
+              }
+              if (isFinancialManager) return true;
+              return false;
+          }).map(user => (
               <div key={user.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col relative overflow-hidden group">
                   <div className={`absolute top-0 left-0 w-1 h-full ${
                       user.role === UserRole.SUPER_ADMIN ? 'bg-purple-500' :
@@ -331,6 +377,12 @@ const UsersPage = () => {
                           <div className="flex items-center text-sm text-slate-600">
                               <MapPin size={14} className="mr-2 text-slate-400" />
                               <span>{hubs.find(h => h.id === user.hubId)?.name || 'Unknown Hub'}</span>
+                          </div>
+                      )}
+                      {user.area && (
+                          <div className="flex items-center text-sm text-slate-600">
+                              <MapPin size={14} className="mr-2 text-slate-400" />
+                              <span>Area: {user.area}</span>
                           </div>
                       )}
                   </div>

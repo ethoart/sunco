@@ -26,6 +26,19 @@ const SettingsPage = () => {
   const [salesThreshold, setSalesThreshold] = useState(companySettings?.salesTargetThreshold || 1000000);
   const [salesBonusPct, setSalesBonusPct] = useState(companySettings?.salesTargetBonusPercentage || 5);
 
+  React.useEffect(() => {
+    if (companySettings) {
+      setCompName(companySettings.companyName || '');
+      setCompAddress(companySettings.address || '');
+      setCompEmail(companySettings.email || '');
+      setCompPhone(companySettings.phone || '');
+      setCompTagline(companySettings.tagline || '');
+      setCompLogoBase64(companySettings.logoBase64 || '');
+      setSalesThreshold(companySettings.salesTargetThreshold || 1000000);
+      setSalesBonusPct(companySettings.salesTargetBonusPercentage || 5);
+    }
+  }, [companySettings]);
+
   // Hubs State
   const [isEditingHub, setIsEditingHub] = useState<Hub | null>(null);
   const [hubName, setHubName] = useState('');

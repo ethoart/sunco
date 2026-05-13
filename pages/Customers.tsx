@@ -7,6 +7,10 @@ const Customers = () => {
   const { customers, addCustomer, updateCustomer, deleteCustomer, currentUser, hubs, invoices, formatCurrency } = useERP();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [areaFilter, setAreaFilter] = useState('');
+
+  // Extract unique areas for the filter dropdown
+  const uniqueAreas = Array.from(new Set(customers.map(c => c.area).filter(Boolean))) as string[];
 
   // New Customer State
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
@@ -27,6 +31,13 @@ const Customers = () => {
     if (isHubAdmin || isStaff) {
       if (c.hubId !== currentUser?.hubId) return false;
     }
+    // Area Filter for Staff
+    if (isStaff && currentUser?.area) {
+       if (c.area !== currentUser.area) return false;
+    }
+
+    // UI Area Filter Dropdown
+    if (areaFilter && c.area !== areaFilter) return false;
     
     // Search Filter
     const searchLower = searchTerm.toLowerCase();
@@ -58,6 +69,7 @@ const Customers = () => {
       shopName: newCustomer.shopName!,
       phone: newCustomer.phone!,
       address: newCustomer.address || '',
+      area: newCustomer.area || '',
       hubId: currentUser?.hubId || 'hub-001', // Default to current hub or first
       salesPersonId: currentUser?.id,
       status: isSuperAdmin || isHubAdmin ? 'APPROVED' : 'PENDING', // Auto-approve if admin
@@ -66,7 +78,7 @@ const Customers = () => {
     });
 
     setIsAddModalOpen(false);
-    setNewCustomer({ name: '', shopName: '', phone: '', address: '', type: 'REGISTERED' });
+    setNewCustomer({ name: '', shopName: '', phone: '', address: '', area: '', type: 'REGISTERED' });
     alert(isSuperAdmin || isHubAdmin ? "Customer added successfully!" : "Customer registration submitted for approval.");
   };
 
@@ -94,9 +106,9 @@ const Customers = () => {
         </button>
       </div>
 
-      {/* Search Bar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div className="relative">
+      {/* Filters & Search */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
           <input 
             type="text" 
@@ -106,6 +118,20 @@ const Customers = () => {
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
+        {(!isStaff || !currentUser?.area) && uniqueAreas.length > 0 && (
+          <div className="w-full md:w-64">
+            <select
+              className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sun-500 focus:border-sun-500 outline-none"
+              value={areaFilter}
+              onChange={e => setAreaFilter(e.target.value)}
+            >
+              <option value="">All Areas</option>
+              {uniqueAreas.map(area => (
+                <option key={area} value={area}>{area}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Pending Approvals (Admin Only) */}
@@ -187,7 +213,9 @@ const Customers = () => {
                           <div>
                             <div className="text-sm font-bold text-slate-900">{customer.shopName}</div>
                             <div className="text-sm text-slate-500">{customer.name}</div>
-                            <div className="text-xs text-slate-400">{customer.phone}</div>
+                            <div className="text-xs text-slate-400">
+                                {customer.phone} {customer.area && `• ${customer.area}`}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -267,6 +295,23 @@ const Customers = () => {
                   onChange={e => setNewCustomer({...newCustomer, phone: e.target.value})}
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Area</label>
+                <input 
+                  type="text" 
+                  list="area-options"
+                  placeholder="e.g. Galle"
+                  className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-sun-500 focus:border-sun-500 outline-none"
+                  value={newCustomer.area || ''}
+                  onChange={e => setNewCustomer({...newCustomer, area: e.target.value})}
+                  required
+                />
+                <datalist id="area-options">
+                    {uniqueAreas.map(area => (
+                        <option key={area} value={area} />
+                    ))}
+                </datalist>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Address</label>

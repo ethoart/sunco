@@ -40,7 +40,7 @@ const connectDB = async () => {
 };
 
 // --- Mongoose Schemas ---
-const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, status: String, basicSalary: Number, petrolAllowance: Number, bikeAllowance: Number }, { versionKey: false });
+const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, area: String, status: String, basicSalary: Number, petrolAllowance: Number, bikeAllowance: Number }, { versionKey: false });
 const UserModel = mongoose.model('User', userSchema);
 
 const hubSchema = new mongoose.Schema({ id: String, name: String, location: String, managerId: String, contactNumber: String, status: String }, { versionKey: false });
@@ -58,7 +58,7 @@ const StockRequestModel = mongoose.model('StockRequest', stockRequestSchema);
 const stockBatchSchema = new mongoose.Schema({ id: String, productId: String, hubId: String, quantity: Number, originalQuantity: Number, receivedDate: String, expiryDate: String, batchNumber: String }, { versionKey: false });
 const StockBatchModel = mongoose.model('StockBatch', stockBatchSchema);
 
-const customerSchema = new mongoose.Schema({ id: String, name: String, shopName: String, phone: String, address: String, type: String, hubId: String, status: String }, { versionKey: false });
+const customerSchema = new mongoose.Schema({ id: String, name: String, shopName: String, phone: String, address: String, area: String, type: String, hubId: String, status: String }, { versionKey: false });
 const CustomerModel = mongoose.model('Customer', customerSchema);
 
 const invoiceItemSchema = new mongoose.Schema({ productId: String, quantity: Number, priceAtSale: Number }, { _id: false });
@@ -68,7 +68,7 @@ const InvoiceModel = mongoose.model('Invoice', invoiceSchema);
 const transactionSchema = new mongoose.Schema({ id: String, date: String, type: String, category: String, amount: Number, description: String, hubId: String }, { versionKey: false });
 const TransactionModel = mongoose.model('Transaction', transactionSchema);
 
-const salarySlipSchema = new mongoose.Schema({ id: String, employeeId: String, employeeName: String, month: String, year: Number, basicSalary: Number, allowances: Number, deductions: Number, netSalary: Number, status: String, hubId: String }, { versionKey: false });
+const salarySlipSchema = new mongoose.Schema({ id: String, employeeName: String, role: String, hubId: String, month: String, basicSalary: Number, bonus: Number, deductions: Number, netSalary: Number, dateGenerated: String }, { versionKey: false });
 const SalarySlipModel = mongoose.model('SalarySlip', salarySlipSchema);
 
 const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String, invoiceId: String, batchId: String }, { versionKey: false });
@@ -118,10 +118,10 @@ async function seedDatabase() {
 
     await SettingModel.create({
       id: "company-settings",
-      companyName: "Sunro Lanka Beverages.",
-      address: "Ranasgalla,Nakkawaththa,Kurunegala,Srilanka",
+      companyName: "sun cola beverages pvt",
+      address: "Kurunagala, Sri Lanka",
       email: "sunrolankabeverages@gmail.com",
-      phone: "0777402632",
+      phone: "0727402632",
       tagline: "Delivering Premium Excellence."
     });
 

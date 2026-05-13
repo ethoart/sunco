@@ -22,6 +22,7 @@ export interface User {
   role: UserRole;
   jobTitle: string;
   hubId?: string; // If null, belongs to Head Office
+  area?: string; // e.g., 'Galle', assigned area for sales/staff
   permissions: string[]; // e.g., 'view_finance', 'create_invoice'
   phone?: string;
   basicSalary?: number;
@@ -74,6 +75,7 @@ export interface Customer {
   shopName: string;
   phone: string;
   address: string;
+  area?: string; // Add area to customer
   hubId: string;
   salesPersonId?: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';

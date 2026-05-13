@@ -153,6 +153,7 @@ const Invoices = () => {
             address: guestDetails.address,
             type: 'GUEST',
             hubId: selectedHubId || currentUser?.hubId || 'hub-001',
+            area: currentUser?.role === UserRole.STAFF ? currentUser?.area : undefined,
             status: 'APPROVED',
             shopName: 'Guest Walk-in'
         });
@@ -459,6 +460,8 @@ const Invoices = () => {
                                  <option value="">Select Customer</option>
                                  {customers
                                     .filter(c => c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) || (c.shopName && c.shopName.toLowerCase().includes(customerSearchTerm.toLowerCase())))
+                                    .filter(c => currentUser?.role === UserRole.STAFF ? c.hubId === currentUser.hubId && (currentUser.area ? c.area === currentUser.area : true) : true)
+                                    .filter(c => currentUser?.role === UserRole.HUB_ADMIN ? c.hubId === currentUser.hubId : true)
                                     .map(c => (
                                      <option key={c.id} value={c.id}>{c.name} - {c.shopName} ({c.status})</option>
                                  ))}

@@ -1,22 +1,23 @@
 import React from 'react';
-import { SalarySlip, User, Hub } from '../types';
+import { SalarySlip, User, Hub, CompanySettings } from '../types';
 
 interface SalarySlipTemplateProps {
   slip: SalarySlip;
   employee?: User;
   hub?: Hub;
+  companySettings?: CompanySettings | null;
 }
 
-export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, employee, hub }) => {
+export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, employee, hub, companySettings }) => {
   return (
     <div id={`salary-slip-${slip.id}`} className="hidden print:block p-8 bg-white text-black max-w-3xl mx-auto">
       <div className="border-b-2 border-slate-800 pb-4 mb-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">SUN COLA</h1>
-            <p className="text-sm text-slate-600 mt-1">Beverage Distribution Co.</p>
-            <p className="text-sm text-slate-600">Head Office: Colombo, Sri Lanka</p>
-            <p className="text-sm text-slate-600">Phone: +94 11 234 5678</p>
+            <h1 className="text-3xl font-bold text-slate-900">{companySettings?.companyName || 'sun cola beverages pvt'}</h1>
+            <p className="text-sm text-slate-600 mt-1">{companySettings?.tagline || ''}</p>
+            <p className="text-sm text-slate-600">Head Office: {companySettings?.address || 'Kurunagala, Sri Lanka'}</p>
+            <p className="text-sm text-slate-600">Phone: {companySettings?.phone || '0727402632'}</p>
           </div>
           <div className="text-right">
             <h2 className="text-2xl font-bold text-slate-800">SALARY SLIP</h2>
@@ -61,23 +62,27 @@ export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, em
             {employee?.petrolAllowance ? (
             <tr>
               <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Petrol Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">({(employee.petrolAllowance || 0).toFixed(2)})</td>
+              <td className="border border-slate-300 p-3 text-right text-sm">+{(employee.petrolAllowance || 0).toFixed(2)}</td>
             </tr>
             ) : null}
             {employee?.bikeAllowance ? (
             <tr>
               <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Bike Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">({(employee.bikeAllowance || 0).toFixed(2)})</td>
+              <td className="border border-slate-300 p-3 text-right text-sm">+{(employee.bikeAllowance || 0).toFixed(2)}</td>
             </tr>
             ) : null}
+            {slip.bonus > 0 ? (
             <tr>
               <td className="border border-slate-300 p-3">Bonuses / Total Allowances</td>
               <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.bonus || 0).toFixed(2)}</td>
             </tr>
+            ) : null}
+            {slip.deductions > 0 ? (
             <tr>
               <td className="border border-slate-300 p-3">Deductions (Tax, EPF, etc.)</td>
               <td className="border border-slate-300 p-3 text-right text-red-600">-{(slip.deductions || 0).toFixed(2)}</td>
             </tr>
+            ) : null}
             <tr className="bg-slate-50 font-bold">
               <td className="border border-slate-300 p-3 text-right">NET SALARY</td>
               <td className="border border-slate-300 p-3 text-right text-lg">{(slip.netSalary || 0).toFixed(2)}</td>
