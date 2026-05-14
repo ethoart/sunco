@@ -76,11 +76,7 @@ const Finance = () => {
           setBasicSalary(employee.basicSalary || 0);
           
           let calculatedBonus = employee.bonuses || 0;
-          let calculatedAllocations = 0;
-
-          // Add Petrol and Bike allowance
-          if (employee.petrolAllowance) calculatedAllocations += employee.petrolAllowance;
-          if (employee.bikeAllowance) calculatedAllocations += employee.bikeAllowance;
+          let calculatedAllocations = employee.allowances || 0;
 
           // Check if salesperson achieved target
           const employeeInvoices = invoices.filter(inv => inv.createdBy === employee.id);

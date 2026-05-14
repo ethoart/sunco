@@ -40,7 +40,7 @@ const connectDB = async () => {
 };
 
 // --- Mongoose Schemas ---
-const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, area: String, status: String, basicSalary: Number, petrolAllowance: Number, bikeAllowance: Number }, { versionKey: false });
+const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, area: String, status: String, basicSalary: Number, bonuses: Number, allowances: Number }, { versionKey: false });
 const UserModel = mongoose.model('User', userSchema);
 
 const hubSchema = new mongoose.Schema({ id: String, name: String, location: String, managerId: String, contactNumber: String, status: String }, { versionKey: false });

@@ -27,8 +27,7 @@ export interface User {
   phone?: string;
   basicSalary?: number;
   bonuses?: number;
-  petrolAllowance?: number;
-  bikeAllowance?: number;
+  allowances?: number;
 }
 
 export interface Product {

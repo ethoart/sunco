@@ -52,13 +52,14 @@ const UsersPage = () => {
           permissions: [],
           phone: '',
           basicSalary: newUser.basicSalary || 0,
-          bonuses: newUser.bonuses || 0
+          bonuses: newUser.bonuses || 0,
+          allowances: newUser.allowances || 0
       });
       setShowForm(false);
       setNewUser({ 
         username: '', email: '', password: '', fullName: '', 
         role: UserRole.STAFF, hubId: '', jobTitle: '', employeeId: '', area: '',
-        basicSalary: 0, bonuses: 0
+        basicSalary: 0, bonuses: 0, allowances: 0
       });
   };
 
@@ -79,10 +80,12 @@ const UsersPage = () => {
         updates.area = editingUser.area;
         updates.basicSalary = editingUser.basicSalary;
         updates.bonuses = editingUser.bonuses;
+        updates.allowances = editingUser.allowances;
         // Password update could be added here if needed
     } else if (isFinancialManager) {
         updates.basicSalary = editingUser.basicSalary;
         updates.bonuses = editingUser.bonuses;
+        updates.allowances = editingUser.allowances;
     }
 
     updateUser(editingUser.id, updates);
@@ -197,6 +200,11 @@ const UsersPage = () => {
                         className="p-2 border border-slate-300 rounded-lg bg-white text-black"
                         value={newUser.bonuses || ''} onChange={e => setNewUser({...newUser, bonuses: Number(e.target.value)})}
                       />
+                      <input 
+                        placeholder="Allowances (LKR)" type="number"
+                        className="p-2 border border-slate-300 rounded-lg bg-white text-black"
+                        value={newUser.allowances || ''} onChange={e => setNewUser({...newUser, allowances: Number(e.target.value)})}
+                      />
                     </>
                   )}
 
@@ -290,21 +298,12 @@ const UsersPage = () => {
                             />
                         </div>
                         <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700">Petrol Allowance (LKR)</label>
+                            <label className="block text-sm font-medium text-gray-700">Allowances (LKR)</label>
                             <input 
                             type="number"
                             className="w-full p-2 border border-slate-300 rounded-lg"
-                            value={editingUser.petrolAllowance || 0}
-                            onChange={e => setEditingUser({...editingUser, petrolAllowance: Number(e.target.value)})}
-                            />
-                        </div>
-                        <div className="mt-2">
-                            <label className="block text-sm font-medium text-gray-700">Bike Allowance (LKR)</label>
-                            <input 
-                            type="number"
-                            className="w-full p-2 border border-slate-300 rounded-lg"
-                            value={editingUser.bikeAllowance || 0}
-                            onChange={e => setEditingUser({...editingUser, bikeAllowance: Number(e.target.value)})}
+                            value={editingUser.allowances || 0}
+                            onChange={e => setEditingUser({...editingUser, allowances: Number(e.target.value)})}
                             />
                         </div>
                     </div>
