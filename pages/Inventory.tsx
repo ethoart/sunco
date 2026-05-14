@@ -259,7 +259,7 @@ const Inventory = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center no-print">
+      <div className="flex justify-between items-center no-print print:hidden">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
           <p className="text-slate-500">Real-time stock tracking across all hubs.</p>
@@ -345,7 +345,7 @@ const Inventory = () => {
         </div>
       </div>
 
-      <div className="flex border-b border-slate-200 mb-6 space-x-4 no-print">
+      <div className="flex border-b border-slate-200 mb-6 space-x-4 no-print print:hidden">
         <button 
             className={`py-2 px-1 font-medium text-sm transition-colors ${viewMode === 'STOCKS' ? 'text-sun-600 border-b-2 border-sun-600' : 'text-slate-500 hover:text-slate-800'}`}
             onClick={() => setViewMode('STOCKS')}
@@ -369,7 +369,7 @@ const Inventory = () => {
       </div>
 
       {viewMode === 'STOCKS' ? (
-      <div className="grid grid-cols-1 gap-6 no-print">
+      <div className="grid grid-cols-1 gap-6 no-print print:hidden">
         {products.map((product) => (
           <div key={product.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
             <div 
@@ -499,7 +499,7 @@ const Inventory = () => {
            )}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print print:hidden">
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
@@ -550,7 +550,7 @@ const Inventory = () => {
                />
            )}
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print print:hidden">
             <div className="p-4 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-bold text-slate-800">Hub Stock Requests</h2>
             </div>
@@ -614,7 +614,7 @@ const Inventory = () => {
 
       {/* Add Product Modal */}
       {addProductModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 no-print">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 no-print print:hidden">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center">
                 <Plus className="mr-2 text-indigo-600" />

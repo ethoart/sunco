@@ -160,7 +160,7 @@ const Dashboard = () => {
         {/* Middle Column: Stats Grid (Col Span 5) */}
         <div className="lg:col-span-8 xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Net Profit - Orange */}
-          <div className="bg-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 text-white relative overflow-hidden flex flex-col justify-between h-48">
+          <div className="bg-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 text-white relative overflow-hidden flex flex-col justify-between h-[11rem]">
             <div className="flex justify-between items-start relative z-10">
               <div>
                 <p className="text-orange-100 font-medium text-sm mb-1">Net Profit</p>
@@ -180,7 +180,7 @@ const Dashboard = () => {
           </div>
 
           {/* Total Spending */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Expenses</p>
@@ -199,7 +199,7 @@ const Dashboard = () => {
           </div>
 
           {/* Total Orders */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Orders</p>
@@ -218,7 +218,7 @@ const Dashboard = () => {
           </div>
 
           {/* Avg Order Value */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-500 font-medium text-sm mb-1">Avg. Order Value</p>
@@ -239,7 +239,7 @@ const Dashboard = () => {
           </div>
 
           {/* Total Clients */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-48">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem] sm:col-span-2">
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Clients</p>

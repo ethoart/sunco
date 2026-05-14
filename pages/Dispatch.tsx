@@ -162,7 +162,7 @@ const Dispatch = () => {
          )}
       </div>
 
-      <div className="flex justify-between items-center no-print">
+      <div className="flex justify-between items-center no-print print:hidden">
         <h1 className="text-2xl font-bold text-slate-800">
           {view === 'LIST' ? 'Stock Dispatch' : 'New Dispatch'}
         </h1>
@@ -187,7 +187,7 @@ const Dispatch = () => {
       </div>
 
       {view === 'LIST' ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print print:hidden">
             <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200">
                     <thead className="bg-slate-50">
@@ -229,7 +229,7 @@ const Dispatch = () => {
             </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print print:hidden">
             {/* Left: Product Selection */}
             <div className="lg:col-span-2 space-y-6">
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200">

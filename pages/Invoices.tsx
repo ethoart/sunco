@@ -243,7 +243,7 @@ const Invoices = () => {
          )}
        </div>
 
-      <div className="flex justify-between items-center no-print">
+      <div className="flex justify-between items-center no-print print:hidden">
         <h1 className="text-2xl font-bold text-slate-800">
           {view === 'LIST' ? 'Invoices & Returns' : view === 'EDIT' ? `Edit Invoice #${editingInvoice?.id}` : isReturnReceipt ? 'New Return' : 'New Invoice'}
         </h1>
@@ -288,7 +288,7 @@ const Invoices = () => {
       </div>
 
       {viewingInvoice && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print overflow-y-auto">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 no-print print:hidden overflow-y-auto">
               <div className="bg-white rounded-xl shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col relative">
                   <div className="flex justify-between items-center p-4 border-b bg-slate-50 rounded-t-xl">
                       <h3 className="text-lg font-bold text-slate-800">View Invoice #{viewingInvoice.id}</h3>
@@ -315,7 +315,7 @@ const Invoices = () => {
       )}
 
       {view === 'LIST' ? (
-        <div className="space-y-4 no-print">
+        <div className="space-y-4 no-print print:hidden">
             <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <input 
@@ -380,7 +380,7 @@ const Invoices = () => {
             </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 no-print print:hidden">
             {/* Left: Product Selection */}
             <div className="lg:col-span-2 space-y-6">
                 {currentUser?.role === UserRole.SUPER_ADMIN && (
