@@ -108,7 +108,7 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <h2 className="text-2xl 2xl:text-3xl font-bold text-slate-900 mb-2 truncate" title={formatCurrency(totalRevenue)}>
+            <h2 className="text-2xl 2xl:text-3xl font-bold text-slate-900 mb-2 break-all" title={formatCurrency(totalRevenue)}>
               {formatCurrency(totalRevenue)}
             </h2>
             <div className="flex items-center text-green-600 text-xs font-bold bg-green-50 w-fit px-2 py-1 rounded-md mb-6">
@@ -164,9 +164,9 @@ const Dashboard = () => {
           {/* Net Profit - Orange */}
           <div className="bg-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 text-white relative overflow-hidden flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start relative z-10">
-              <div className="w-full overflow-hidden">
+              <div className="w-full pr-2">
                 <p className="text-orange-100 font-medium text-sm mb-1">Net Profit</p>
-                <h3 className="text-2xl 2xl:text-3xl font-bold truncate" title={formatCurrency(netProfit)}>
+                <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-bold break-all" title={formatCurrency(netProfit)}>
                   {formatCurrency(netProfit)}
                 </h3>
               </div>
@@ -186,9 +186,9 @@ const Dashboard = () => {
           {/* Total Spending */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div className="w-full overflow-hidden">
+              <div className="w-full pr-2">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Expenses</p>
-                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate" title={formatCurrency(totalExpenses)}>
+                <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-bold text-slate-900 break-all" title={formatCurrency(totalExpenses)}>
                   {formatCurrency(totalExpenses)}
                 </h3>
               </div>
@@ -207,9 +207,9 @@ const Dashboard = () => {
           {/* Total Orders */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div className="w-full overflow-hidden">
+              <div className="w-full pr-2">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Orders</p>
-                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate" title={filteredInvoices.length.toString()}>
+                <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-bold text-slate-900 break-all" title={filteredInvoices.length.toString()}>
                   {filteredInvoices.length}
                 </h3>
               </div>
@@ -228,9 +228,9 @@ const Dashboard = () => {
           {/* Avg Order Value */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div className="w-full overflow-hidden">
+              <div className="w-full pr-2">
                 <p className="text-slate-500 font-medium text-sm mb-1">Avg. Order Value</p>
-                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate">
+                <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-bold text-slate-900 break-all">
                   {formatCurrency(filteredInvoices.length > 0 ? totalRevenue / filteredInvoices.length : 0)}
                 </h3>
               </div>
@@ -249,9 +249,9 @@ const Dashboard = () => {
           {/* Total Clients */}
           <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem] sm:col-span-2">
             <div className="flex justify-between items-start">
-              <div className="w-full overflow-hidden">
+              <div className="w-full pr-2">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Clients</p>
-                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate">
+                <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-bold text-slate-900 break-all">
                   {customers.filter(c => effectiveHubId ? c.hubId === effectiveHubId : true).length}
                 </h3>
               </div>
