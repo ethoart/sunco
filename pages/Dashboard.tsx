@@ -108,7 +108,9 @@ const Dashboard = () => {
               </div>
             </div>
             
-            <h2 className="text-3xl font-bold text-slate-900 mb-2">{formatCurrency(totalRevenue)}</h2>
+            <h2 className="text-2xl 2xl:text-3xl font-bold text-slate-900 mb-2 truncate" title={formatCurrency(totalRevenue)}>
+              {formatCurrency(totalRevenue)}
+            </h2>
             <div className="flex items-center text-green-600 text-xs font-bold bg-green-50 w-fit px-2 py-1 rounded-md mb-6">
               <TrendingUp size={12} className="mr-1" />
               +12% than last period
@@ -160,11 +162,13 @@ const Dashboard = () => {
         {/* Middle Column: Stats Grid (Col Span 5) */}
         <div className="lg:col-span-8 xl:col-span-5 grid grid-cols-1 sm:grid-cols-2 gap-6">
           {/* Net Profit - Orange */}
-          <div className="bg-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 text-white relative overflow-hidden flex flex-col justify-between h-[11rem]">
+          <div className="bg-orange-500 p-6 rounded-3xl shadow-lg shadow-orange-200 text-white relative overflow-hidden flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start relative z-10">
-              <div>
+              <div className="w-full overflow-hidden">
                 <p className="text-orange-100 font-medium text-sm mb-1">Net Profit</p>
-                <h3 className="text-3xl font-bold">{formatCurrency(netProfit)}</h3>
+                <h3 className="text-2xl 2xl:text-3xl font-bold truncate" title={formatCurrency(netProfit)}>
+                  {formatCurrency(netProfit)}
+                </h3>
               </div>
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 <DollarSign size={20} />
@@ -180,11 +184,13 @@ const Dashboard = () => {
           </div>
 
           {/* Total Spending */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="w-full overflow-hidden">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Expenses</p>
-                <h3 className="text-3xl font-bold text-slate-900">{formatCurrency(totalExpenses)}</h3>
+                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate" title={formatCurrency(totalExpenses)}>
+                  {formatCurrency(totalExpenses)}
+                </h3>
               </div>
               <div className="p-2 bg-slate-50 rounded-xl text-slate-500">
                 <ArrowDownRight size={20} />
@@ -199,11 +205,13 @@ const Dashboard = () => {
           </div>
 
           {/* Total Orders */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="w-full overflow-hidden">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Orders</p>
-                <h3 className="text-3xl font-bold text-slate-900">{filteredInvoices.length}</h3>
+                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate" title={filteredInvoices.length.toString()}>
+                  {filteredInvoices.length}
+                </h3>
               </div>
               <div className="p-2 bg-slate-50 rounded-xl text-slate-500">
                 <Activity size={20} />
@@ -218,11 +226,11 @@ const Dashboard = () => {
           </div>
 
           {/* Avg Order Value */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem]">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem]">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="w-full overflow-hidden">
                 <p className="text-slate-500 font-medium text-sm mb-1">Avg. Order Value</p>
-                <h3 className="text-3xl font-bold text-slate-900">
+                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate">
                   {formatCurrency(filteredInvoices.length > 0 ? totalRevenue / filteredInvoices.length : 0)}
                 </h3>
               </div>
@@ -239,11 +247,11 @@ const Dashboard = () => {
           </div>
 
           {/* Total Clients */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between h-[11rem] sm:col-span-2">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between min-h-[11rem] sm:col-span-2">
             <div className="flex justify-between items-start">
-              <div>
+              <div className="w-full overflow-hidden">
                 <p className="text-slate-500 font-medium text-sm mb-1">Total Clients</p>
-                <h3 className="text-3xl font-bold text-slate-900">
+                <h3 className="text-2xl 2xl:text-3xl font-bold text-slate-900 truncate">
                   {customers.filter(c => effectiveHubId ? c.hubId === effectiveHubId : true).length}
                 </h3>
               </div>
