@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Bell, MessageSquare, Menu, X, ArrowRight, Check, Paperclip, XCircle } from 'lucide-react';
+import { Bell, MessageSquare, Menu, X, ArrowRight, Check, Paperclip, XCircle, Trash2 } from 'lucide-react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole } from '../types';
 
@@ -8,7 +8,7 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
-  const { currentUser, stockRequests, updateStockRequest, hubs, products, messages, addMessage, users } = useERP();
+  const { currentUser, stockRequests, updateStockRequest, hubs, products, messages, addMessage, users, deleteMessage } = useERP();
   const [panelOpen, setPanelOpen] = useState(false);
   const [panelTab, setPanelTab] = useState<'NOTIFS' | 'MESSAGES'>('NOTIFS');
   const [messageText, setMessageText] = useState('');
@@ -173,8 +173,15 @@ const TopBar: React.FC<TopBarProps> = ({ setSidebarOpen }) => {
                                     const receiverName = msg.receiverId === 'PUBLIC' ? 'Public' : msg.receiverId === 'ALL_HUBS' ? 'All Hubs' : msg.receiverId === 'HEAD_OFFICE' ? 'Head Office' : hubs.find(h => h.id === msg.receiverId)?.name || users.find(u => u.id === msg.receiverId)?.fullName || users.find(u => u.id === msg.receiverId)?.username || msg.receiverId;
                                     return (
                                         <div key={msg.id} className={`p-3 rounded-xl max-w-[80%] flex flex-col ${isMe ? 'bg-sun-600 text-white self-end ml-auto' : 'bg-white border text-slate-800'}`}>
-                                            <div className="text-[10px] font-bold mb-1 opacity-70">
-                                                {isMe ? `You (to ${receiverName})` : `${senderName} (to ${receiverName})`}
+                                            <div className="flex justify-between items-start gap-2">
+                                                <div className="text-[10px] font-bold mb-1 opacity-70">
+                                                    {isMe ? `You (to ${receiverName})` : `${senderName} (to ${receiverName})`}
+                                                </div>
+                                                {currentUser?.role === UserRole.SUPER_ADMIN && (
+                                                    <button onClick={() => deleteMessage(msg.id)} className="opacity-50 hover:opacity-100 transition-opacity" title="Delete message">
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                )}
                                             </div>
                                             <div className="text-sm">{msg.content}</div>
                                             {msg.attachments && msg.attachments.length > 0 && (

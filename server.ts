@@ -185,12 +185,20 @@ app.put('/api/stock-requests/:id', async (req, res) => {
   const reqt = await StockRequestModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
   res.json(reqt);
 });
+app.delete('/api/stock-requests/:id', async (req, res) => {
+  await StockRequestModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
 
 // Messages
 app.get('/api/messages', async (req, res) => res.json(await MessageModel.find({}, '-_id')));
 app.post('/api/messages', async (req, res) => {
   const msg = await MessageModel.create(req.body);
   res.status(201).json(msg);
+});
+app.delete('/api/messages/:id', async (req, res) => {
+  await MessageModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
 });
 
 // Emails
@@ -240,6 +248,10 @@ app.post('/api/stock-batches', async (req, res) => {
 app.put('/api/stock-batches/:id', async (req, res) => {
   const batch = await StockBatchModel.findOneAndUpdate({ id: req.params.id }, req.body, { new: true });
   res.json(batch);
+});
+app.delete('/api/stock-batches/:id', async (req, res) => {
+  await StockBatchModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
 });
 app.post('/api/stock-batches/transfer', async (req, res) => {
   const { items, fromHubId, toHubId } = req.body;

@@ -31,11 +31,14 @@ interface ERPContextType {
   stockBatches: StockBatch[];
   addStockBatch: (batch: StockBatch) => void;
   transferStock: (items: { productId: string, qty: number }[], fromHubId: string, toHubId: string) => void;
+  deleteStockBatch: (batchId: string) => void;
   stockRequests: StockRequest[];
   addStockRequest: (req: Partial<StockRequest>) => void;
   updateStockRequest: (id: string, updates: Partial<StockRequest>) => void;
+  deleteStockRequest: (requestId: string) => void;
   messages: Message[];
   addMessage: (msg: Partial<Message>) => void;
+  deleteMessage: (messageId: string) => void;
   customers: Customer[];
   addCustomer: (customer: Customer) => void;
   updateCustomer: (customerId: string, updates: Partial<Customer>) => void;
@@ -373,6 +376,27 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     }
   };
 
+  const deleteStockBatch = async (batchId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/stock-batches/${batchId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setStockBatches(prev => prev.filter(b => b.id !== batchId));
+    }
+  };
+
+  const deleteStockRequest = async (requestId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/stock-requests/${requestId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setStockRequests(prev => prev.filter(r => r.id !== requestId));
+    }
+  };
+
+  const deleteMessage = async (messageId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/messages/${messageId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    }
+  };
+
   const addMessage = async (msg: Partial<Message>) => {
     const res = await fetch(API_BASE_URL + '/api/messages', {
       method: 'POST',
@@ -527,9 +551,9 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       users, addUser, removeUser, updateUser,
       hubs, addHub, updateHub, deleteHub,
       products, addProduct,
-      stocks, stockBatches, addStockBatch, transferStock,
-      stockRequests, addStockRequest, updateStockRequest,
-      messages, addMessage,
+      stocks, stockBatches, addStockBatch, transferStock, deleteStockBatch,
+      stockRequests, addStockRequest, updateStockRequest, deleteStockRequest,
+      messages, addMessage, deleteMessage,
       customers, addCustomer, updateCustomer, deleteCustomer,
       invoices, createInvoice, deleteInvoice, updateInvoice,
       transactions, addTransaction,

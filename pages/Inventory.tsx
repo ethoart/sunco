@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole, StockBatch } from '../types';
 import { HEAD_OFFICE_ID } from '../constants';
-import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar, Printer } from 'lucide-react';
+import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar, Printer, Trash2 } from 'lucide-react';
 import { InvoiceTemplate } from '../services/invoiceGenerator';
 
 import { StockRequestTemplate } from '../components/StockRequestTemplate';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, deleteStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest, deleteStockRequest } = useERP();
   const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES' | 'REQUESTS'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
@@ -403,7 +403,7 @@ const Inventory = () => {
                         <th className="pb-2">Received</th>
                         <th className="pb-2">Expiry</th>
                         <th className="pb-2 text-right">Qty</th>
-                        {canReturnStock && <th className="pb-2 text-right">Action</th>}
+                        {(canReturnStock || currentUser?.role === UserRole.SUPER_ADMIN) && <th className="pb-2 text-right">Action</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -418,26 +418,35 @@ const Inventory = () => {
                             <td className="py-2">{new Date(batch.receivedDate).toLocaleDateString()}</td>
                             <td className={`py-2 ${isExpired ? 'text-red-600 font-bold' : ''}`}>{batch.expiryDate ? new Date(batch.expiryDate).toLocaleDateString() : '-'}</td>
                             <td className="py-2 text-right font-bold">{batch.quantity}</td>
-                            {canReturnStock && (
+                            {(canReturnStock || currentUser?.role === UserRole.SUPER_ADMIN) && (
                                 <td className="py-2 text-right">
-                                    <button 
-                                        onClick={() => {
-                                            addReturnRecord({
-                                                id: `return-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                                productId: batch.productId,
-                                                hubId: batch.hubId,
-                                                quantity: batch.quantity,
-                                                reason: 'EXPIRED',
-                                                date: new Date().toISOString(),
-                                                status: 'PENDING',
-                                                batchId: batch.id
-                                            });
-                                            alert("Sent to returns logic!");
-                                        }}
-                                        className={`text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 ${isExpired ? 'animate-pulse' : ''}`}
-                                    >
-                                        Return 
-                                    </button>
+                                    <div className="flex items-center justify-end gap-2">
+                                        {canReturnStock && (
+                                            <button 
+                                                onClick={() => {
+                                                    addReturnRecord({
+                                                        id: `return-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                                        productId: batch.productId,
+                                                        hubId: batch.hubId,
+                                                        quantity: batch.quantity,
+                                                        reason: 'EXPIRED',
+                                                        date: new Date().toISOString(),
+                                                        status: 'PENDING',
+                                                        batchId: batch.id
+                                                    });
+                                                    alert("Sent to returns logic!");
+                                                }}
+                                                className={`text-xs px-2 py-1 rounded bg-red-100 text-red-600 hover:bg-red-200 ${isExpired ? 'animate-pulse' : ''}`}
+                                            >
+                                                Return 
+                                            </button>
+                                        )}
+                                        {currentUser?.role === UserRole.SUPER_ADMIN && (
+                                            <button onClick={() => { if(confirm('Are you sure you want to delete this stock batch?')) deleteStockBatch(batch.id); }} className="text-red-500 hover:text-red-700">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             )}
                           </tr>
@@ -596,6 +605,15 @@ const Inventory = () => {
                                                 className="text-red-600 hover:text-red-900 mt-1"
                                             >Reject</button>
                                         </>
+                                    )}
+                                    {currentUser?.role === UserRole.SUPER_ADMIN && (
+                                        <button 
+                                            onClick={() => { if(confirm('Are you sure you want to delete this stock request?')) deleteStockRequest(req.id); }} 
+                                            className="text-red-500 hover:text-red-700 ml-2 mt-1 inline-flex items-center"
+                                            title="Delete Request"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     )}
                                 </td>
                             </tr>
