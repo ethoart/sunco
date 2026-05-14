@@ -11,7 +11,7 @@ interface StockRequestTemplateProps {
 
 export const StockRequestTemplate: React.FC<StockRequestTemplateProps> = ({ request, products, hub, companySettings, className }) => {
   return (
-    <div className={`bg-white p-8 max-w-4xl mx-auto text-black font-sans ${className || ''}`} id={`stock-request-${request.id}`}>
+    <div className={`bg-white p-8 print:p-0 print:m-0 max-w-4xl mx-auto text-black font-sans ${className || ''}`} id={`stock-request-${request.id}`}>
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <div className="flex flex-col items-center">
@@ -90,12 +90,12 @@ export const StockRequestTemplate: React.FC<StockRequestTemplateProps> = ({ requ
         </table>
       </div>
 
-      <div className="text-sm mb-12">
+      <div className="text-sm mb-8">
         <span className="font-bold">Status:</span> {request.status}
       </div>
 
       {/* Signatures */}
-      <div className="flex justify-between text-sm mt-16 px-4">
+      <div className="flex justify-between text-sm mt-12 px-4 pb-8">
         <div className="text-center">
           <div className="mb-1 tracking-widest">.....................................</div>
           Hub Manager / Requester

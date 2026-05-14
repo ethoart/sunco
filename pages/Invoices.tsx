@@ -230,7 +230,7 @@ const Invoices = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
        {/* Invoice Template Rendering Area (Hidden until print) */}
        <div className="print-only">
          {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (

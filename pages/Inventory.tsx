@@ -178,6 +178,11 @@ const Inventory = () => {
     e.preventDefault();
     if (!newStockProduct || !newStockHub || newStockQty <= 0 || !newStockBatch) return;
 
+    if (!isSuperAdmin) {
+        alert("Only Super Admins can add stock.");
+        return;
+    }
+
     addStockBatch({
       id: `batch-${Date.now()}`,
       productId: newStockProduct,
@@ -272,7 +277,6 @@ const Inventory = () => {
             </button>
           )}
           {(isSuperAdmin || isHubAdmin) && (
-            <>
               <button 
                 onClick={() => setReportModalOpen(true)}
                 className="group relative w-10 h-10 flex items-center justify-center bg-slate-600 text-white rounded-full hover:bg-slate-700 shadow-sm transition-colors"
@@ -282,6 +286,8 @@ const Inventory = () => {
                   Monthly Report
                 </span>
               </button>
+          )}
+          {isSuperAdmin && (
               <button 
                 onClick={() => setAddStockModalOpen(true)}
                 className="group relative w-10 h-10 flex items-center justify-center bg-green-600 text-white rounded-full hover:bg-green-700 shadow-sm transition-colors"
@@ -291,7 +297,6 @@ const Inventory = () => {
                   Add Stock
                 </span>
               </button>
-            </>
           )}
           {canReturnStock && (
             <>
@@ -481,7 +486,7 @@ const Inventory = () => {
         ))}
       </div>
       ) : viewMode === 'DISPATCHES' ? (
-      <div className="space-y-4">
+      <div className="space-y-4 print:space-y-0">
         {/* Hidden Templates for Printing */}
         <div className="print-only">
           {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
@@ -533,7 +538,7 @@ const Inventory = () => {
         </div>
       </div>
       ) : viewMode === 'REQUESTS' ? (
-      <div className="space-y-4">
+      <div className="space-y-4 print:space-y-0">
         {/* Hidden Stock Request Templates for Printing */}
         <div className="print-only">
           {printingStockRequestId && stockRequests.find(r => r.id === printingStockRequestId) && (

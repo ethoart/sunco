@@ -149,7 +149,7 @@ const Dispatch = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 print:space-y-0">
       <div className="print-only">
         {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
              <InvoiceTemplate 
