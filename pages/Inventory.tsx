@@ -483,7 +483,7 @@ const Inventory = () => {
       ) : viewMode === 'DISPATCHES' ? (
       <div className="space-y-4">
         {/* Hidden Templates for Printing */}
-        <div className="hidden print-only">
+        <div className="print-only">
           {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
                <InvoiceTemplate 
                   invoice={invoices.find(i => i.id === printingInvoiceId)!} 
@@ -535,7 +535,7 @@ const Inventory = () => {
       ) : viewMode === 'REQUESTS' ? (
       <div className="space-y-4">
         {/* Hidden Stock Request Templates for Printing */}
-        <div className="hidden print-only">
+        <div className="print-only">
           {printingStockRequestId && stockRequests.find(r => r.id === printingStockRequestId) && (
                <StockRequestTemplate 
                   request={stockRequests.find(r => r.id === printingStockRequestId)!} 
@@ -545,7 +545,7 @@ const Inventory = () => {
                />
            )}
         </div>
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden no-print">
             <div className="p-4 bg-slate-50 border-b border-slate-200">
                 <h2 className="font-bold text-slate-800">Hub Stock Requests</h2>
             </div>
