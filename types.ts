@@ -27,7 +27,8 @@ export interface User {
   phone?: string;
   basicSalary?: number;
   bonuses?: number;
-  allowances?: number;
+  petrolAllowance?: number;
+  bikeAllowance?: number;
 }
 
 export interface Product {
@@ -149,7 +150,8 @@ export interface SalarySlip {
   month: string;
   basicSalary: number;
   bonus: number;
-  allowances: number;
+  petrolAllowance?: number;
+  bikeAllowance?: number;
   deductions: number;
   netSalary: number;
   dateGenerated: string;

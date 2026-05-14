@@ -14,7 +14,8 @@ const Finance = () => {
   const [salaryMonth, setSalaryMonth] = useState(new Date().toLocaleString('default', { month: 'long' }));
   const [basicSalary, setBasicSalary] = useState(0);
   const [bonus, setBonus] = useState(0);
-  const [allowances, setAllowances] = useState(0);
+  const [petrolAllowance, setPetrolAllowance] = useState(0);
+  const [bikeAllowance, setBikeAllowance] = useState(0);
   const [deductions, setDeductions] = useState(0);
   
   // Expense Form
@@ -76,7 +77,6 @@ const Finance = () => {
           setBasicSalary(employee.basicSalary || 0);
           
           let calculatedBonus = employee.bonuses || 0;
-          let calculatedAllocations = employee.allowances || 0;
 
           // Check if salesperson achieved target
           const employeeInvoices = invoices.filter(inv => inv.createdBy === employee.id);
@@ -90,13 +90,14 @@ const Finance = () => {
               calculatedBonus += salesBonus;
           }
 
-          // Add allowances to the flat basic salary to make it appear separated, or lump it as bonus
           setBonus(calculatedBonus);
-          setAllowances(calculatedAllocations);
+          setPetrolAllowance(employee.petrolAllowance || 0);
+          setBikeAllowance(employee.bikeAllowance || 0);
       } else {
           setBasicSalary(0);
           setBonus(0);
-          setAllowances(0);
+          setPetrolAllowance(0);
+          setBikeAllowance(0);
       }
       setDeductions(0);
   };
@@ -108,7 +109,7 @@ const Finance = () => {
       const employee = users.find(u => u.id === selectedEmpId);
       if (!employee) return;
 
-      const netSalary = basicSalary + bonus + allowances - deductions;
+      const netSalary = basicSalary + bonus + petrolAllowance + bikeAllowance - deductions;
       
       addSalarySlip({
           id: Date.now().toString(),
@@ -118,7 +119,8 @@ const Finance = () => {
           month: salaryMonth,
           basicSalary,
           bonus,
-          allowances,
+          petrolAllowance,
+          bikeAllowance,
           deductions,
           netSalary,
           dateGenerated: new Date().toISOString()
@@ -128,7 +130,8 @@ const Finance = () => {
       setSelectedEmpId('');
       setBasicSalary(0);
       setBonus(0);
-      setAllowances(0);
+      setPetrolAllowance(0);
+      setBikeAllowance(0);
       setDeductions(0);
       alert("Salary Slip Generated!");
   };
@@ -366,7 +369,7 @@ const Finance = () => {
                             value={basicSalary} onChange={e => setBasicSalary(parseFloat(e.target.value))}
                         />
                     </div>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-4 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-600 mb-1">Bonus</label>
                             <input 
@@ -376,11 +379,19 @@ const Finance = () => {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-600 mb-1">Allowances</label>
+                            <label className="block text-sm font-medium text-slate-600 mb-1">Petrol Allow.</label>
                             <input 
                                 type="number" min="0"
                                 className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
-                                value={allowances} onChange={e => setAllowances(parseFloat(e.target.value) || 0)}
+                                value={petrolAllowance} onChange={e => setPetrolAllowance(parseFloat(e.target.value) || 0)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-600 mb-1">Bike Allow.</label>
+                            <input 
+                                type="number" min="0"
+                                className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
+                                value={bikeAllowance} onChange={e => setBikeAllowance(parseFloat(e.target.value) || 0)}
                             />
                         </div>
                         <div>
@@ -396,7 +407,7 @@ const Finance = () => {
                     <div className="pt-2 border-t border-slate-100">
                         <div className="flex justify-between font-bold text-slate-800 mb-4">
                             <span>Net Salary:</span>
-                            <span>{formatCurrency(basicSalary + bonus + allowances - deductions)}</span>
+                            <span>{formatCurrency(basicSalary + bonus + petrolAllowance + bikeAllowance - deductions)}</span>
                         </div>
                         <button className="w-full py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md">
                             Generate Slip

@@ -40,7 +40,7 @@ const connectDB = async () => {
 };
 
 // --- Mongoose Schemas ---
-const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, area: String, status: String, basicSalary: Number, bonuses: Number, allowances: Number }, { versionKey: false });
+const userSchema = new mongoose.Schema({ id: String, name: String, fullName: String, email: String, password: String, role: String, hubId: String, area: String, status: String, basicSalary: Number, bonuses: Number, petrolAllowance: Number, bikeAllowance: Number }, { versionKey: false });
 const UserModel = mongoose.model('User', userSchema);
 
 const hubSchema = new mongoose.Schema({ id: String, name: String, location: String, managerId: String, contactNumber: String, status: String }, { versionKey: false });
@@ -68,7 +68,7 @@ const InvoiceModel = mongoose.model('Invoice', invoiceSchema);
 const transactionSchema = new mongoose.Schema({ id: String, date: String, type: String, category: String, amount: Number, description: String, hubId: String }, { versionKey: false });
 const TransactionModel = mongoose.model('Transaction', transactionSchema);
 
-const salarySlipSchema = new mongoose.Schema({ id: String, employeeName: String, role: String, hubId: String, month: String, basicSalary: Number, bonus: Number, allowances: Number, deductions: Number, netSalary: Number, dateGenerated: String }, { versionKey: false });
+const salarySlipSchema = new mongoose.Schema({ id: String, employeeName: String, role: String, hubId: String, month: String, basicSalary: Number, bonus: Number, petrolAllowance: Number, bikeAllowance: Number, deductions: Number, netSalary: Number, dateGenerated: String }, { versionKey: false });
 const SalarySlipModel = mongoose.model('SalarySlip', salarySlipSchema);
 
 const returnRecordSchema = new mongoose.Schema({ id: String, date: String, productId: String, hubId: String, quantity: Number, reason: String, status: String, approvedBy: String, invoiceId: String, batchId: String }, { versionKey: false });

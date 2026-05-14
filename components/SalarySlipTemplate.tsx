@@ -65,10 +65,16 @@ export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, em
               <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.bonus || 0).toFixed(2)}</td>
             </tr>
             ) : null}
-            {slip.allowances > 0 ? (
+            {slip.petrolAllowance ? (
             <tr>
-              <td className="border border-slate-300 p-3">Allowances</td>
-              <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.allowances || 0).toFixed(2)}</td>
+              <td className="border border-slate-300 p-3">Petrol Allowance</td>
+              <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.petrolAllowance || 0).toFixed(2)}</td>
+            </tr>
+            ) : null}
+            {slip.bikeAllowance ? (
+            <tr>
+              <td className="border border-slate-300 p-3">Bike Allowance</td>
+              <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.bikeAllowance || 0).toFixed(2)}</td>
             </tr>
             ) : null}
             {slip.deductions > 0 ? (
