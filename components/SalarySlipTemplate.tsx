@@ -59,22 +59,16 @@ export const SalarySlipTemplate: React.FC<SalarySlipTemplateProps> = ({ slip, em
               <td className="border border-slate-300 p-3">Basic Salary</td>
               <td className="border border-slate-300 p-3 text-right">{(slip.basicSalary || 0).toFixed(2)}</td>
             </tr>
-            {employee?.petrolAllowance ? (
-            <tr>
-              <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Petrol Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">+{(employee.petrolAllowance || 0).toFixed(2)}</td>
-            </tr>
-            ) : null}
-            {employee?.bikeAllowance ? (
-            <tr>
-              <td className="border border-slate-300 p-3 text-slate-500 text-sm">-- Bike Allowance</td>
-              <td className="border border-slate-300 p-3 text-right text-sm">+{(employee.bikeAllowance || 0).toFixed(2)}</td>
-            </tr>
-            ) : null}
             {slip.bonus > 0 ? (
             <tr>
-              <td className="border border-slate-300 p-3">Bonuses / Total Allowances</td>
+              <td className="border border-slate-300 p-3">Bonus</td>
               <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.bonus || 0).toFixed(2)}</td>
+            </tr>
+            ) : null}
+            {slip.allowances > 0 ? (
+            <tr>
+              <td className="border border-slate-300 p-3">Allowances</td>
+              <td className="border border-slate-300 p-3 text-right text-green-600">+{(slip.allowances || 0).toFixed(2)}</td>
             </tr>
             ) : null}
             {slip.deductions > 0 ? (

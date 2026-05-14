@@ -14,6 +14,7 @@ const Finance = () => {
   const [salaryMonth, setSalaryMonth] = useState(new Date().toLocaleString('default', { month: 'long' }));
   const [basicSalary, setBasicSalary] = useState(0);
   const [bonus, setBonus] = useState(0);
+  const [allowances, setAllowances] = useState(0);
   const [deductions, setDeductions] = useState(0);
   
   // Expense Form
@@ -94,10 +95,12 @@ const Finance = () => {
           }
 
           // Add allowances to the flat basic salary to make it appear separated, or lump it as bonus
-          setBonus(calculatedBonus + calculatedAllocations);
+          setBonus(calculatedBonus);
+          setAllowances(calculatedAllocations);
       } else {
           setBasicSalary(0);
           setBonus(0);
+          setAllowances(0);
       }
       setDeductions(0);
   };
@@ -109,7 +112,7 @@ const Finance = () => {
       const employee = users.find(u => u.id === selectedEmpId);
       if (!employee) return;
 
-      const netSalary = basicSalary + bonus - deductions;
+      const netSalary = basicSalary + bonus + allowances - deductions;
       
       addSalarySlip({
           id: Date.now().toString(),
@@ -119,6 +122,7 @@ const Finance = () => {
           month: salaryMonth,
           basicSalary,
           bonus,
+          allowances,
           deductions,
           netSalary,
           dateGenerated: new Date().toISOString()
@@ -128,6 +132,7 @@ const Finance = () => {
       setSelectedEmpId('');
       setBasicSalary(0);
       setBonus(0);
+      setAllowances(0);
       setDeductions(0);
       alert("Salary Slip Generated!");
   };
@@ -365,13 +370,21 @@ const Finance = () => {
                             value={basicSalary} onChange={e => setBasicSalary(parseFloat(e.target.value))}
                         />
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-600 mb-1">Bonus</label>
                             <input 
                                 type="number" min="0"
                                 className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
-                                value={bonus} onChange={e => setBonus(parseFloat(e.target.value))}
+                                value={bonus} onChange={e => setBonus(parseFloat(e.target.value) || 0)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-600 mb-1">Allowances</label>
+                            <input 
+                                type="number" min="0"
+                                className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
+                                value={allowances} onChange={e => setAllowances(parseFloat(e.target.value) || 0)}
                             />
                         </div>
                         <div>
@@ -379,7 +392,7 @@ const Finance = () => {
                             <input 
                                 type="number" min="0"
                                 className="w-full p-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-sun-500 bg-white text-black"
-                                value={deductions} onChange={e => setDeductions(parseFloat(e.target.value))}
+                                value={deductions} onChange={e => setDeductions(parseFloat(e.target.value) || 0)}
                             />
                         </div>
                     </div>
@@ -387,7 +400,7 @@ const Finance = () => {
                     <div className="pt-2 border-t border-slate-100">
                         <div className="flex justify-between font-bold text-slate-800 mb-4">
                             <span>Net Salary:</span>
-                            <span>{formatCurrency(basicSalary + bonus - deductions)}</span>
+                            <span>{formatCurrency(basicSalary + bonus + allowances - deductions)}</span>
                         </div>
                         <button className="w-full py-2 bg-sun-600 text-white rounded-lg hover:bg-sun-700 shadow-md">
                             Generate Slip

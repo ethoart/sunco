@@ -150,6 +150,7 @@ export interface SalarySlip {
   month: string;
   basicSalary: number;
   bonus: number;
+  allowances: number;
   deductions: number;
   netSalary: number;
   dateGenerated: string;

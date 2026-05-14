@@ -5,15 +5,18 @@ import { HEAD_OFFICE_ID } from '../constants';
 import { Package, Truck, ArrowRight, RefreshCw, Plus, RotateCcw, Calendar, Printer } from 'lucide-react';
 import { InvoiceTemplate } from '../services/invoiceGenerator';
 
+import { StockRequestTemplate } from '../components/StockRequestTemplate';
+
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest } = useERP();
-  const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES'>('STOCKS');
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest } = useERP();
+  const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES' | 'REQUESTS'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
   const [returnModalOpen, setReturnModalOpen] = useState(false);
   const [addProductModalOpen, setAddProductModalOpen] = useState(false);
   const [viewReturnsModalOpen, setViewReturnsModalOpen] = useState(false);
   const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
+  const [printingStockRequestId, setPrintingStockRequestId] = useState<string | null>(null);
   
   // Transfer State
   const [targetHub, setTargetHub] = useState('');
@@ -71,7 +74,7 @@ const Inventory = () => {
     addStockRequest({
         id: `req-${Date.now()}`,
         hubId: currentUser?.hubId || '',
-        items: transferItems,
+        items: transferItems.map(i => ({ productId: i.productId, quantity: i.qty })),
         status: 'PENDING',
         createdAt: new Date().toISOString()
     });
@@ -241,6 +244,14 @@ const Inventory = () => {
       }, 100);
   };
 
+  const handlePrintStockRequest = (reqId: string) => {
+      setPrintingStockRequestId(reqId);
+      setTimeout(() => {
+          window.print();
+          setPrintingStockRequestId(null);
+      }, 100);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center no-print">
@@ -344,6 +355,12 @@ const Inventory = () => {
                 Dispatch Notes (Transfers)
             </button>
         )}
+        <button 
+            className={`py-2 px-1 font-medium text-sm transition-colors ${viewMode === 'REQUESTS' ? 'text-sun-600 border-b-2 border-sun-600' : 'text-slate-500 hover:text-slate-800'}`}
+            onClick={() => setViewMode('REQUESTS')}
+        >
+            Stock Requests
+        </button>
       </div>
 
       {viewMode === 'STOCKS' ? (
@@ -463,9 +480,9 @@ const Inventory = () => {
           </div>
         ))}
       </div>
-      ) : (
+      ) : viewMode === 'DISPATCHES' ? (
       <div className="space-y-4">
-        {/* Hidden Invoice Templates for Printing */}
+        {/* Hidden Templates for Printing */}
         <div className="hidden print-only">
           {printingInvoiceId && invoices.find(i => i.id === printingInvoiceId) && (
                <InvoiceTemplate 
@@ -515,7 +532,80 @@ const Inventory = () => {
             </div>
         </div>
       </div>
-      )}
+      ) : viewMode === 'REQUESTS' ? (
+      <div className="space-y-4">
+        {/* Hidden Stock Request Templates for Printing */}
+        <div className="hidden print-only">
+          {printingStockRequestId && stockRequests.find(r => r.id === printingStockRequestId) && (
+               <StockRequestTemplate 
+                  request={stockRequests.find(r => r.id === printingStockRequestId)!} 
+                  products={products} 
+                  hub={hubs.find(h => h.id === stockRequests.find(r => r.id === printingStockRequestId)?.hubId)}
+                  companySettings={companySettings}
+               />
+           )}
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="p-4 bg-slate-50 border-b border-slate-200">
+                <h2 className="font-bold text-slate-800">Hub Stock Requests</h2>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                    <thead className="bg-slate-50">
+                        <tr>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Hub name</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Items summary</th>
+                            <th className="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-200">
+                        {stockRequests.filter(req => (isSuperAdmin || req.hubId === currentUser?.hubId)).map(req => (
+                            <tr key={req.id} className="hover:bg-slate-50">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">{new Date(req.createdAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-900">{hubs.find(h => h.id === req.hubId)?.name || 'Unknown'}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                    <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        ${req.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                          req.status === 'APPROVED' ? 'bg-green-100 text-green-800' : 
+                                          'bg-red-100 text-red-800'}`}>
+                                        {req.status}
+                                    </span>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-slate-600">
+                                    {req.items.map(item => `${products.find(p => p.id === item.productId)?.name || 'Product'} (x${item.quantity})`).join(', ')}
+                                </td>
+                                <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium space-x-2">
+                                    <button onClick={() => handlePrintStockRequest(req.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center mt-1">
+                                        <Printer size={18} className="mr-1" /> Print Slip
+                                    </button>
+                                    {isSuperAdmin && req.status === 'PENDING' && (
+                                        <>
+                                            <button 
+                                                onClick={() => updateStockRequest(req.id, { status: 'APPROVED' })} 
+                                                className="text-green-600 hover:text-green-900 mx-2 mt-1"
+                                            >Approve</button>
+                                            <button 
+                                                onClick={() => updateStockRequest(req.id, { status: 'REJECTED' })} 
+                                                className="text-red-600 hover:text-red-900 mt-1"
+                                            >Reject</button>
+                                        </>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                        {stockRequests.filter(req => (isSuperAdmin || req.hubId === currentUser?.hubId)).length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-6 py-8 text-center text-slate-400">No stock requests found</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+      ) : null}
 
       {/* Add Product Modal */}
       {addProductModalOpen && (
