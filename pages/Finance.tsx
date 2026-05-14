@@ -1,12 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { useERP } from '../contexts/ERPContext';
 import { UserRole } from '../types';
-import { DollarSign, Wallet, FileText, PieChart as PieChartIcon, Building2, Users, Printer, Plus } from 'lucide-react';
+import { DollarSign, Wallet, FileText, PieChart as PieChartIcon, Building2, Users, Printer, Plus, Trash2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { SalarySlipTemplate } from '../components/SalarySlipTemplate';
 
 const Finance = () => {
-  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction, invoices, companySettings } = useERP();
+  const { currentUser, transactions, addSalarySlip, salarySlips, formatCurrency, hubs, users, addTransaction, invoices, companySettings, deleteSalarySlip, deleteTransaction } = useERP();
   const [activeTab, setActiveTab] = useState<'PNL' | 'SALARY' | 'EXPENSES'>('PNL');
   
   // Salary Form
@@ -439,13 +439,24 @@ const Finance = () => {
                                         <td className="px-6 py-4 text-sm text-slate-500">{slip.month}</td>
                                         <td className="px-6 py-4 text-sm text-right font-bold text-slate-700">{formatCurrency(slip.netSalary)}</td>
                                         <td className="px-6 py-4 text-center">
-                                            <button 
-                                                onClick={() => handlePrintSalary(slip.id)}
-                                                className="text-slate-600 hover:text-sun-600"
-                                                title="Print Slip"
-                                            >
-                                                <Printer size={18} />
-                                            </button>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button 
+                                                    onClick={() => handlePrintSalary(slip.id)}
+                                                    className="text-slate-600 hover:text-sun-600"
+                                                    title="Print Slip"
+                                                >
+                                                    <Printer size={18} />
+                                                </button>
+                                                {currentUser?.role === UserRole.SUPER_ADMIN && (
+                                                    <button 
+                                                        onClick={() => { if(confirm('Are you sure you want to delete this salary slip?')) deleteSalarySlip(slip.id); }}
+                                                        className="text-red-500 hover:text-red-700"
+                                                        title="Delete Slip"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -513,6 +524,7 @@ const Finance = () => {
                                       <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Category</th>
                                       <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Amount</th>
                                       <th className="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Date</th>
+                                      {(currentUser?.role === UserRole.SUPER_ADMIN) && <th className="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Action</th>}
                                   </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-200">
@@ -524,10 +536,20 @@ const Finance = () => {
                                           </td>
                                           <td className="px-6 py-4 text-sm text-right font-bold text-red-600">{formatCurrency(txn.amount)}</td>
                                           <td className="px-6 py-4 text-sm text-slate-500">{new Date(txn.date).toLocaleDateString()}</td>
+                                          {(currentUser?.role === UserRole.SUPER_ADMIN) && (
+                                              <td className="px-6 py-4 text-sm text-right">
+                                                  <button 
+                                                      onClick={() => { if(confirm('Are you sure you want to delete this expense?')) deleteTransaction(txn.id); }}
+                                                      className="text-red-500 hover:text-red-700"
+                                                  >
+                                                      <Trash2 size={16} />
+                                                  </button>
+                                              </td>
+                                          )}
                                       </tr>
                                   ))}
                                   {filteredTransactions.filter(t => t.type === 'EXPENSE').length === 0 && (
-                                      <tr><td colSpan={4} className="text-center py-6 text-slate-400">No expenses found</td></tr>
+                                      <tr><td colSpan={currentUser?.role === UserRole.SUPER_ADMIN ? 5 : 4} className="text-center py-6 text-slate-400">No expenses found</td></tr>
                                   )}
                               </tbody>
                           </table>

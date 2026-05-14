@@ -8,7 +8,7 @@ import { InvoiceTemplate } from '../services/invoiceGenerator';
 import { StockRequestTemplate } from '../components/StockRequestTemplate';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, deleteStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest, deleteStockRequest } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, deleteStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, deleteProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest, deleteStockRequest } = useERP();
   const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES' | 'REQUESTS'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
@@ -385,9 +385,23 @@ const Inventory = () => {
                   <p className="text-xs text-slate-500">SKU: {product.sku}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-slate-500">Unit Price</div>
-                <div className="font-bold text-slate-800">{formatCurrency(product.sellingPrice)}</div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <div className="text-sm text-slate-500">Unit Price</div>
+                  <div className="font-bold text-slate-800">{formatCurrency(product.sellingPrice)}</div>
+                </div>
+                {currentUser?.role === UserRole.SUPER_ADMIN && (
+                   <button 
+                     onClick={(e) => { 
+                       e.stopPropagation(); 
+                       if(confirm('Are you sure you want to delete this product?')) deleteProduct(product.id); 
+                     }} 
+                     className="text-red-500 hover:text-red-700 p-2"
+                     title="Delete Product"
+                   >
+                     <Trash2 size={18} />
+                   </button>
+                )}
               </div>
             </div>
             

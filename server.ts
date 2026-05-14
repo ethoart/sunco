@@ -174,6 +174,10 @@ app.post('/api/products', async (req, res) => {
   const product = await ProductModel.create(req.body);
   res.status(201).json(product);
 });
+app.delete('/api/products/:id', async (req, res) => {
+  await ProductModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
 
 // Stock Requests
 app.get('/api/stock-requests', async (req, res) => res.json(await StockRequestModel.find({}, '-_id')));
@@ -385,6 +389,10 @@ app.post('/api/transactions', async (req, res) => {
   const transaction = await TransactionModel.create(req.body);
   res.status(201).json(transaction);
 });
+app.delete('/api/transactions/:id', async (req, res) => {
+  await TransactionModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
+});
 
 // Salary Slips
 app.get('/api/salary-slips', async (req, res) => res.json(await SalarySlipModel.find({}, '-_id')));
@@ -395,6 +403,10 @@ app.post('/api/salary-slips', async (req, res) => {
       amount: slip.netSalary, description: `Salary for ${slip.employeeName}`, hubId: slip.hubId
   });
   res.status(201).json({ slip, transaction });
+});
+app.delete('/api/salary-slips/:id', async (req, res) => {
+  await SalarySlipModel.findOneAndDelete({ id: req.params.id });
+  res.status(204).send();
 });
 
 // Return Records

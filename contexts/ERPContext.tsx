@@ -27,6 +27,7 @@ interface ERPContextType {
   deleteHub: (hubId: string) => void;
   products: Product[];
   addProduct: (product: Product) => void;
+  deleteProduct: (productId: string) => void;
   stocks: Stock[]; // Derived from batches
   stockBatches: StockBatch[];
   addStockBatch: (batch: StockBatch) => void;
@@ -49,8 +50,10 @@ interface ERPContextType {
   updateInvoice: (invoiceId: string, updates: Partial<Invoice>) => void;
   transactions: Transaction[];
   addTransaction: (transaction: Transaction) => void;
+  deleteTransaction: (transactionId: string) => void;
   salarySlips: SalarySlip[];
   addSalarySlip: (slip: SalarySlip) => void;
+  deleteSalarySlip: (slipId: string) => void;
   returnRecords: ReturnRecord[];
   addReturnRecord: (record: ReturnRecord) => void;
   formatCurrency: (amount: number) => string;
@@ -498,6 +501,13 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       setTransactions(prev => [...prev, newTransaction]);
     }
   };
+
+  const deleteTransaction = async (transactionId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/transactions/${transactionId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setTransactions(prev => prev.filter(t => t.id !== transactionId));
+    }
+  };
   
   const addSalarySlip = async (slip: SalarySlip) => {
     const res = await fetch(API_BASE_URL + '/api/salary-slips', {
@@ -512,6 +522,13 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     }
   };
 
+  const deleteSalarySlip = async (slipId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/salary-slips/${slipId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setSalarySlips(prev => prev.filter(s => s.id !== slipId));
+    }
+  };
+
   const addProduct = async (product: Product) => {
     const res = await fetch(API_BASE_URL + '/api/products', {
       method: 'POST',
@@ -521,6 +538,13 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
     if (res.ok) {
       const newProduct = await res.json();
       setProducts(prev => [...prev, newProduct]);
+    }
+  };
+
+  const deleteProduct = async (productId: string) => {
+    const res = await fetch(API_BASE_URL + `/api/products/${productId}`, { method: 'DELETE' });
+    if (res.ok) {
+      setProducts(prev => prev.filter(p => p.id !== productId));
     }
   };
 
@@ -550,14 +574,14 @@ export const ERPProvider = ({ children }: { children?: ReactNode }) => {
       currentUser, login, logout,
       users, addUser, removeUser, updateUser,
       hubs, addHub, updateHub, deleteHub,
-      products, addProduct,
+      products, addProduct, deleteProduct,
       stocks, stockBatches, addStockBatch, transferStock, deleteStockBatch,
       stockRequests, addStockRequest, updateStockRequest, deleteStockRequest,
       messages, addMessage, deleteMessage,
       customers, addCustomer, updateCustomer, deleteCustomer,
       invoices, createInvoice, deleteInvoice, updateInvoice,
-      transactions, addTransaction,
-      salarySlips, addSalarySlip,
+      transactions, addTransaction, deleteTransaction,
+      salarySlips, addSalarySlip, deleteSalarySlip,
       returnRecords, addReturnRecord,
       formatCurrency, companySettings, updateCompanySettings
     }}>

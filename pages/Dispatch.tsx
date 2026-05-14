@@ -210,9 +210,11 @@ const Dispatch = () => {
                                     <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center">
                                          Print Note
                                     </button>
-                                    <button onClick={() => handleDelete(inv.id)} className="text-red-500 hover:text-red-700 ml-4">
-                                         <Trash2 size={16} />
-                                    </button>
+                                    {currentUser?.role === UserRole.SUPER_ADMIN && (
+                                        <button onClick={() => handleDelete(inv.id)} className="text-red-500 hover:text-red-700 ml-4">
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
