@@ -20,6 +20,26 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+let dbConnectionError: string | null = null;
+
+// Database connectivity check middleware
+app.use((req, res, next) => {
+  // We only intercept API paths (except email sending since it doesn't query the DB)
+  if (req.path.startsWith('/api/') && req.path !== '/api/send-email') {
+    if (mongoose.connection.readyState !== 1) {
+      console.error(`[API ERROR] Database not connected. readyState: ${mongoose.connection.readyState}. Error:`, dbConnectionError);
+      res.status(503).json({
+        error: "Database connection is not active.",
+        readyState: mongoose.connection.readyState,
+        details: dbConnectionError || "The database connection hasn't been established. If this is a production server, please ensure that the 'MONGODB_URI' environment variable is correctly configured in your PM2 process or .env file. If you are relying on the in-memory MongoDB fallback, ensure that your environment has internet access to download the MongoDB binary and has the necessary dependencies installed (libssl, libcurl, etc.).",
+        tip: "Please check your server logs or run 'pm2 logs' to see the exact error output."
+      });
+      return;
+    }
+  }
+  next();
+});
+
 import { MongoMemoryServer } from 'mongodb-memory-server';
 
 // MongoDB Connection & Models
@@ -33,9 +53,11 @@ const connectDB = async () => {
       }
       await mongoose.connect(uri);
       console.log('Connected to MongoDB');
+      dbConnectionError = null;
       await seedDatabase();
-    } catch (err) {
+    } catch (err: any) {
       console.error('MongoDB connection error:', err);
+      dbConnectionError = err?.stack || err?.message || String(err);
     }
 };
 
@@ -435,6 +457,17 @@ app.post('/api/return-records', async (req, res) => {
   }
 
   res.status(201).json(record);
+});
+
+
+// Global Express Error Handler
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error('[EXPRESS GLOBAL ERROR]', err);
+  res.status(500).json({
+    error: "Internal Server Error",
+    message: err?.message || "An unexpected error occurred",
+    stack: process.env.NODE_ENV !== 'production' ? err?.stack : undefined
+  });
 });
 
 

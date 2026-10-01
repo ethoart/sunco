@@ -8,7 +8,7 @@ import { InvoiceTemplate } from '../services/invoiceGenerator';
 import { StockRequestTemplate } from '../components/StockRequestTemplate';
 
 const Inventory = () => {
-  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, deleteStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, deleteProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest, deleteStockRequest } = useERP();
+  const { products, stocks, stockBatches, hubs, currentUser, transferStock, addStockBatch, deleteStockBatch, addReturnRecord, formatCurrency, invoices, addProduct, deleteProduct, returnRecords, createInvoice, customers, companySettings, addStockRequest, stockRequests, updateStockRequest, deleteStockRequest, deleteInvoice } = useERP();
   const [viewMode, setViewMode] = useState<'STOCKS' | 'DISPATCHES' | 'REQUESTS'>('STOCKS');
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   const [addStockModalOpen, setAddStockModalOpen] = useState(false);
@@ -547,6 +547,19 @@ const Inventory = () => {
                                     <button onClick={() => handlePrint(inv.id)} className="text-slate-600 hover:text-sun-600 inline-flex items-center">
                                         <Printer size={18} className="mr-1" /> Print Note
                                     </button>
+                                    {isSuperAdmin && (
+                                        <button 
+                                            onClick={() => {
+                                                if (confirm('Are you sure you want to delete this dispatch note?')) {
+                                                    deleteInvoice(inv.id);
+                                                }
+                                            }}
+                                            className="text-red-500 hover:text-red-700 ml-4 inline-flex items-center align-middle"
+                                            title="Delete Dispatch Note"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
                                 </td>
                             </tr>
                         ))}
