@@ -25,6 +25,7 @@ export interface User {
   area?: string; // e.g., 'Galle', assigned area for sales/staff
   permissions: string[]; // e.g., 'view_finance', 'create_invoice'
   phone?: string;
+  status?: 'ACTIVE' | 'PENDING' | 'INACTIVE';
   basicSalary?: number;
   bonuses?: number;
   petrolAllowance?: number;

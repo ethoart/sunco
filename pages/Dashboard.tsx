@@ -117,46 +117,46 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Hubs List */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-slate-900">Active Hubs</h3>
-              <span className="text-xs text-slate-500 font-medium">Total {hubs.length}</span>
-            </div>
-            <div className="space-y-4">
-              {hubs.slice(0, 3).map((hub, idx) => (
-                <div 
-                  key={hub.id} 
-                  onClick={() => handleHubClick(hub.id)}
-                  className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
-                    selectedHubId === hub.id 
-                      ? 'bg-slate-900 border-slate-900 shadow-md' 
-                      : 'bg-white border-transparent hover:bg-slate-50'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+          {/* Hubs List (Super Admin Only) */}
+          {isSuperAdmin && (
+            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-slate-900">Active Hubs</h3>
+                <span className="text-xs text-slate-500 font-medium">Total {hubs.length}</span>
+              </div>
+              <div className="space-y-4">
+                {hubs.slice(0, 3).map((hub, idx) => (
+                  <div 
+                    key={hub.id} 
+                    onClick={() => handleHubClick(hub.id)}
+                    className={`flex items-center justify-between p-3 rounded-2xl transition-all cursor-pointer group border ${
                       selectedHubId === hub.id 
-                        ? 'bg-slate-800 text-white' 
-                        : (idx === 0 ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600')
-                    }`}>
-                      <Building2 size={20} />
+                        ? 'bg-slate-900 border-slate-900 shadow-md' 
+                        : 'bg-white border-transparent hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
+                        selectedHubId === hub.id 
+                          ? 'bg-slate-800 text-white' 
+                          : (idx === 0 ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600')
+                      }`}>
+                        <Building2 size={20} />
+                      </div>
+                      <div>
+                        <p className={`font-bold text-sm ${selectedHubId === hub.id ? 'text-white' : 'text-slate-900'}`}>
+                          {hub.name}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className={`font-bold text-sm ${selectedHubId === hub.id ? 'text-white' : 'text-slate-900'}`}>
-                        {hub.name}
-                      </p>
-                    </div>
-                  </div>
-                  {(isSuperAdmin || isFinancialManager) && (
                     <div className={`text-xs font-bold px-2 py-1 rounded-lg ${selectedHubId === hub.id ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-500'}`}>
                       View
                     </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Middle Column: Stats Grid (Col Span 5) */}

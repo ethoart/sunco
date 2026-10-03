@@ -49,6 +49,7 @@ const UsersPage = () => {
           jobTitle: newUser.jobTitle || 'Staff',
           hubId: newUser.role === UserRole.SUPER_ADMIN || newUser.role === UserRole.FINANCIAL_MANAGER ? undefined : (newUser.hubId || currentUser?.hubId),
           area: newUser.role === UserRole.STAFF ? newUser.area : undefined,
+          status: 'ACTIVE', // Instantly active account without requiring approval
           permissions: [],
           phone: '',
           basicSalary: newUser.basicSalary || 0,
@@ -57,6 +58,7 @@ const UsersPage = () => {
           bikeAllowance: newUser.bikeAllowance || 0
       });
       setShowForm(false);
+      alert("Salesperson / User account created and activated successfully!");
       setNewUser({ 
         username: '', email: '', password: '', fullName: '', 
         role: UserRole.STAFF, hubId: '', jobTitle: '', employeeId: '', area: '',

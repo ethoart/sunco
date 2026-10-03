@@ -72,14 +72,14 @@ const Customers = () => {
       area: newCustomer.area || '',
       hubId: currentUser?.hubId || 'hub-001', // Default to current hub or first
       salesPersonId: currentUser?.id,
-      status: isSuperAdmin || isHubAdmin ? 'APPROVED' : 'PENDING', // Auto-approve if admin
+      status: 'APPROVED', // Directly approve all accounts without an approval process
       type: 'REGISTERED',
       buyingLimit: 50000 // Default limit
     });
 
     setIsAddModalOpen(false);
     setNewCustomer({ name: '', shopName: '', phone: '', address: '', area: '', type: 'REGISTERED' });
-    alert(isSuperAdmin || isHubAdmin ? "Customer added successfully!" : "Customer registration submitted for approval.");
+    alert("Customer added successfully!");
   };
 
   const handleApprove = (customerId: string) => {
