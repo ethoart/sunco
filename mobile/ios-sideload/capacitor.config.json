@@ -1,0 +1,13 @@
+{
+  "appId": "com.suncola.erp",
+  "appName": "Sun Cola ERP",
+  "webDir": "www",
+  "ios": {"contentInset": "never"},
+  "server": {
+    "url": "https://suncola.hyperoms.xyz/",
+    "allowNavigation": ["suncola.hyperoms.xyz"],
+    "cleartext": false,
+    "errorPath": "network-error.html"
+  },
+  "plugins": {"SplashScreen": {"launchShowDuration": 1000, "launchAutoHide": true, "launchFadeOutDuration": 300, "backgroundColor": "#ffffffff", "showSpinner": false}}
+}

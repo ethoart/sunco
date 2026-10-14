@@ -1,0 +1,41 @@
+name: Suncola iPhone sideload IPA
+on:
+  push:
+    branches: ['feature/ios-sideload-20261014']
+    paths: ['mobile/ios-sideload/**', '.github/workflows/ios-sideload.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-sideload-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile/ios-sideload
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/ios-sideload/package-lock.json
+      - name: Select Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+      - run: xcodebuild -version
+      - run: python3 test-package-ipa.py
+      - name: Compile and package unsigned iPhone app
+        run: bash build-unsigned-ios.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Suncola-iOS-sideload-IPA
+          path: |
+            mobile/ios-sideload/out/Suncola-iOS-1.1.0-sideload.ipa
+            mobile/ios-sideload/out/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

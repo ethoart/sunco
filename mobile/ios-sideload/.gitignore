@@ -1,0 +1,12 @@
+node_modules/
+build/
+out/
+__pycache__/
+Payload/
+*.ipa
+*.p12
+*.mobileprovision
+*.xcarchive/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/App/App/public/
